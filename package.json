@@ -4,7 +4,7 @@
   "description": "Family tree",
   "main": "src/main.ts",
   "scripts": {
-    "build": "tsc && browserify build/main.js -o output/bundle.js",
+    "build": "ts-interface-builder src/input.ts --outDir src/gen && tsc && browserify build/main.js -o output/bundle.js",
     "serve": "http-server"
   },
   "repository": {
@@ -13,15 +13,14 @@
   },
   "author": "Alexey Gerasev <alexey.gerasev@gmail.com>",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/agerasev/family-tree/issues"
-  },
-  "homepage": "https://github.com/agerasev/family-tree#readme",
+  "homepage": "https://github.com/agerasev/family-tree",
   "dependencies": {
     "@types/jquery": "^3.5.5",
     "browserify": "^17.0.0",
     "jquery": "^3.5.1",
     "toml": "^3.0.0",
+    "ts-interface-builder": "^0.3.0",
+    "ts-interface-checker": "^0.2.0",
     "typescript": "^4.1.5"
   },
   "devDependencies": {
