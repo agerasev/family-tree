@@ -1,0 +1,17 @@
+body {
+  padding: 0px;
+  margin: 4px;
+  background-color: #AAAAAA;
+}
+
+.person-box {
+  position: absolute;
+  display: inline-block;
+  width: 160px;
+  height: 120px;
+  margin: 4px;
+  padding: 4px;
+  overflow: clip;
+  border: 1px solid #000000;
+  background-color: #FFFFFF;
+}

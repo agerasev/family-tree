@@ -4,7 +4,7 @@
   "description": "Family tree",
   "main": "src/main.ts",
   "scripts": {
-    "build": "ts-interface-builder src/input.ts --outDir src/gen && tsc && browserify build/main.js -o output/bundle.js",
+    "build": "ts-interface-builder src/input.ts --outDir src/gen && sass style/main.scss output/style.css && tsc && browserify build/main.js -o output/bundle.js",
     "serve": "http-server"
   },
   "repository": {
@@ -18,6 +18,7 @@
     "@types/jquery": "^3.5.5",
     "browserify": "^17.0.0",
     "jquery": "^3.5.1",
+    "sass": "^1.32.8",
     "toml": "^3.0.0",
     "ts-interface-builder": "^0.3.0",
     "ts-interface-checker": "^0.2.0",
