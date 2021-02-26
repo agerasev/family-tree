@@ -2,6 +2,7 @@ import $ = require("jquery");
 import { Person, mixIds } from "../data";
 import { Composer } from "./composer";
 import { Crawler } from "./crawler";
+import style from "../gen/style-defs";
 
 export class NodeButton {
   check: () => boolean;
@@ -50,8 +51,12 @@ export class PersonNode implements Entity {
     this.position = position;
     this.level = level;
 
+    let [css_left, css_top] = [
+      (parseFloat(style.personContainerWidth) * this.position) + "px",
+      (parseFloat(style.personContainerHeight) * this.level) + "px",
+    ];
     this.html = $(`
-      <div class='person-container' style='left:${300 * (this.position + 1)}px;top:${300 * (this.level + 1)}px;'>
+      <div class='person-container' style='left: ${css_left}; top: ${css_top};'>
         <div class='person-box'>
           <div>${this.person.name.text()}</div>
         </div>
