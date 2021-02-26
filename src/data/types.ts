@@ -155,7 +155,7 @@ export class Tree {
         person.parents = { father, mother }
 
         father.has_children_with.push(mother);
-        mother.has_children_with.push(mother);
+        mother.has_children_with.push(father);
       }
     }
   }

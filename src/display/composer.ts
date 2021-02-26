@@ -1,6 +1,6 @@
 import $ = require("jquery");
 import { Person, mixIds } from "../data";
-import { PersonNode, HorizontalLink, VerticalLink } from "./node";
+import { PersonNode, HorizontalLink, VerticalLink } from "./elements";
 
 export class Composer {
   nodes: Map<string, PersonNode>;
@@ -35,6 +35,8 @@ export class Composer {
       left.addSide(hlink);
       right.addSide(hlink);
       this.html.append(hlink.html);
+      left.refresh();
+      right.refresh();
       return hlink;
     }
   }
@@ -48,6 +50,8 @@ export class Composer {
       top.addBottom(vlink);
       bottom.setTop(vlink);
       this.html.append(vlink.html);
+      top.refresh();
+      bottom.refresh();
       return vlink;
     }
   }

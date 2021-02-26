@@ -9,6 +9,6 @@ $(function () {
     console.log(tree);
     let composer = new Composer();
     $(document.body).append(composer.html);
-    composer.createNode(tree.persons.get("17e71bf8371fc0696602148257e366ad")!).expandBottom();
+    composer.createNode(tree.persons.get("17e71bf8371fc0696602148257e366ad")!);//.expandBottom();
   });
 });

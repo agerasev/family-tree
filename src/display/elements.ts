@@ -2,26 +2,71 @@ import $ = require("jquery");
 import { Person, mixIds } from "../data";
 import { Composer } from "./composer";
 
+export class PersonNodeButton {
+  check: () => boolean;
+  run: () => void;
+  html: JQuery<HTMLElement>;
+
+  constructor(check: () => boolean, run: () => void, css_class: string, text: string) {
+    this.check = check;
+    this.run = run;
+
+    let html = $(`<div class='person-button ${css_class}'>${text}</div>`)
+    html.on("click", this.run)
+    this.html = html;
+  }
+
+  refresh() {
+    if (this.check()) {
+      this.html.removeClass("person-button-hidden");
+    } else {
+      this.html.addClass("person-button-hidden");
+    }
+  }
+}
+
 export class PersonNode {
   composer: Composer;
   person: Person;
   html: JQuery<HTMLElement>;
   top: VerticalLink | null;
   side: Map<string, HorizontalLink>;
+  buttons: PersonNodeButton[];
 
   constructor(composer: Composer, person: Person) {
     this.composer = composer;
     this.person = person;
     this.top = null;
     this.side = new Map<string, HorizontalLink>();
+
     this.html = $(`
-      <div class='person-box'>
-        <div>${this.person.name.text()}</div>
+      <div class='person-container'>
+        <div class='person-box'>
+          <div>${this.person.name.text()}</div>
+        </div>
       </div>
     `)
+    this.buttons = [
+      new PersonNodeButton(this.canExpandTop, this.expandTop, "person-expand-top", "+"),
+      new PersonNodeButton(this.canCollapseTop, this.collapseTop, "person-collapse-top", "−"),
+      new PersonNodeButton(this.canExpandSide, this.expandSide, "person-expand-side", "+"),
+      new PersonNodeButton(this.canCollapseSide, this.collapseSide, "person-collapse-side", "−"),
+      new PersonNodeButton(this.canExpandBottom, this.expandBottom, "person-expand-bottom", "+"),
+      new PersonNodeButton(this.canCollapseBottom, this.collapseBottom, "person-collapse-bottom", "−"),
+    ];
+    for (let button of this.buttons) {
+      this.html.append(button.html);
+    }
+    this.refresh();
   }
   remove() {
 
+  }
+
+  refresh() {
+    for (let button of this.buttons) {
+      button.refresh();
+    }
   }
 
   get id(): string {
@@ -47,35 +92,43 @@ export class PersonNode {
     }
   }
 
-  canExpandTop(): boolean {
+  canExpandTop = (): boolean => {
     return this.top === null && this.person.parents !== null;
   }
-  expandTop() {
+  expandTop = () => {
     let father = this.composer.createNode(this.person.parents!.father);
     let mother = this.composer.createNode(this.person.parents!.mother);
     let hlink = this.composer.bindHorizontal(father, mother);
     this.composer.bindVertical(hlink, this);
   }
-  collapseTop() {
+  canCollapseTop = () => {
+    return true;
+  }
+  collapseTop = () => {
     throw Error("Not implemented");
   }
 
-  canExpandSide(): boolean {
+  canExpandSide = (): boolean => {
     return this.person.has_children_with.length > this.side.size;
   }
-  expandSide() {
+  expandSide = () => {
     for (let person of this.person.has_children_with) {
+      console.log(this.side);
       if (!this.side.has(mixIds(this.id, person.id))) {
         let node = this.composer.createNode(person);
         this.composer.bindHorizontal(this, node);
       }
     }
+    this.refresh();
   }
-  collapseSide() {
+  canCollapseSide = () => {
+    return true;
+  }
+  collapseSide = () => {
     throw Error("Not implemented");
   }
 
-  canExpandBottom(): boolean {
+  canExpandBottom = (): boolean => {
     if (this.canExpandSide()) {
       return true;
     } else {
@@ -87,7 +140,7 @@ export class PersonNode {
       return false;
     }
   }
-  expandBottom() {
+  expandBottom = () => {
     this.expandSide();
     for (let [_, hlink] of this.side) {
       if (hlink.canExpandBottom()) {
@@ -95,7 +148,10 @@ export class PersonNode {
       }
     }
   }
-  collapseBottom() {
+  canCollapseBottom = () => {
+    return true;
+  }
+  collapseBottom = () => {
     throw Error("Not implemented");
   }
 }
@@ -114,6 +170,10 @@ export class HorizontalLink {
   }
   remove() {
     throw Error("Not implemented");
+  }
+
+  refresh() {
+    
   }
 
   get id(): string {
