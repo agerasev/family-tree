@@ -1,8 +1,9 @@
 import $ = require("jquery");
 import { Person, mixIds } from "../data";
 import { Composer } from "./composer";
+import { Crawler } from "./crawler";
 
-export class PersonNodeButton {
+export class NodeButton {
   check: () => boolean;
   run: () => void;
   html: JQuery<HTMLElement>;
@@ -11,27 +12,33 @@ export class PersonNodeButton {
     this.check = check;
     this.run = run;
 
-    let html = $(`<div class='person-button ${css_class}'>${text}</div>`)
+    let html = $(`<div class='node-button ${css_class}'>${text}</div>`)
     html.on("click", this.run)
     this.html = html;
   }
 
   refresh() {
     if (this.check()) {
-      this.html.removeClass("person-button-hidden");
+      this.html.removeClass("node-button-hidden");
     } else {
-      this.html.addClass("person-button-hidden");
+      this.html.addClass("node-button-hidden");
     }
   }
 }
 
-export class PersonNode {
+export interface Entity {
+  id(): string,
+  neighbors(): IterableIterator<Entity>,
+  remove(): void,
+}
+
+export class PersonNode implements Entity {
   composer: Composer;
   person: Person;
   html: JQuery<HTMLElement>;
   top: VerticalLink | null;
   side: Map<string, HorizontalLink>;
-  buttons: PersonNodeButton[];
+  buttons: NodeButton[];
 
   constructor(composer: Composer, person: Person) {
     this.composer = composer;
@@ -47,20 +54,16 @@ export class PersonNode {
       </div>
     `)
     this.buttons = [
-      new PersonNodeButton(this.canExpandTop, this.expandTop, "person-expand-top", "+"),
-      new PersonNodeButton(this.canCollapseTop, this.collapseTop, "person-collapse-top", "−"),
-      new PersonNodeButton(this.canExpandSide, this.expandSide, "person-expand-side", "+"),
-      new PersonNodeButton(this.canCollapseSide, this.collapseSide, "person-collapse-side", "−"),
-      new PersonNodeButton(this.canExpandBottom, this.expandBottom, "person-expand-bottom", "+"),
-      new PersonNodeButton(this.canCollapseBottom, this.collapseBottom, "person-collapse-bottom", "−"),
+      new NodeButton(this.canExpandTop, this.expandTop, "person-expand-top", "+"),
+      new NodeButton(this.canCollapseTop, this.collapseTop, "person-collapse-top", "−"),
+      new NodeButton(this.canExpandSide, this.expandSide, "person-expand-side", "+"),
+      new NodeButton(this.canCollapseSide, this.collapseSide, "person-collapse-side", "−"),
+      new NodeButton(this.canExpandBottom, this.expandBottom, "person-expand-bottom", "+"),
     ];
     for (let button of this.buttons) {
       this.html.append(button.html);
     }
     this.refresh();
-  }
-  remove() {
-
   }
 
   refresh() {
@@ -69,8 +72,21 @@ export class PersonNode {
     }
   }
 
-  get id(): string {
+  id(): string {
     return this.person.id;
+  }
+  neighbors(): IterableIterator<Entity> {
+    return function* (self: PersonNode) {
+      if (self.top !== null) {
+        yield self.top;
+      }
+      for (const [_, side] of self.side) {
+        yield side;
+      }
+    }(this);
+  }
+  remove() {
+    this.composer.removeNode(this);
   }
 
   setTop(vlink: VerticalLink) {
@@ -82,11 +98,11 @@ export class PersonNode {
   }
 
   hasSide(hlink: HorizontalLink) {
-    return this.side.has(hlink.id);
+    return this.side.has(hlink.id());
   }
   addSide(hlink: HorizontalLink) {
-    if (!this.side.has(hlink.id)) {
-      this.side.set(hlink.id, hlink);
+    if (!this.side.has(hlink.id())) {
+      this.side.set(hlink.id(), hlink);
     } else {
       throw Error("Link already exists");
     }
@@ -99,13 +115,31 @@ export class PersonNode {
     let father = this.composer.createNode(this.person.parents!.father);
     let mother = this.composer.createNode(this.person.parents!.mother);
     let hlink = this.composer.bindHorizontal(father, mother);
-    this.composer.bindVertical(hlink, this);
+    let vlink = this.composer.bindVertical(hlink, this);
+
+    father.addSide(hlink);
+    mother.addSide(hlink);
+    hlink.addBottom(vlink);
+    this.setTop(vlink);
+
+    father.refresh();
+    mother.refresh();
+    hlink.refresh();
+    this.refresh();
   }
   canCollapseTop = () => {
-    return true;
+    return this.top !== null;
   }
   collapseTop = () => {
-    throw Error("Not implemented");
+    if (this.top !== null) {
+      let crawler = new Crawler([this.id()]);
+      crawler.traverse(this.top);
+      for (let [_, node] of crawler.visited) {
+        node.remove();
+      }
+      this.top = null;
+      this.refresh();
+    }
   }
 
   canExpandSide = (): boolean => {
@@ -113,19 +147,29 @@ export class PersonNode {
   }
   expandSide = () => {
     for (let person of this.person.has_children_with) {
-      console.log(this.side);
-      if (!this.side.has(mixIds(this.id, person.id))) {
+      if (!this.side.has(mixIds(this.id(), person.id))) {
         let node = this.composer.createNode(person);
-        this.composer.bindHorizontal(this, node);
+        let hlink = this.composer.bindHorizontal(this, node);
+        this.addSide(hlink);
+        node.addSide(hlink);
+        node.refresh();
       }
     }
     this.refresh();
   }
   canCollapseSide = () => {
-    return true;
+    return this.side.size > 0;
   }
   collapseSide = () => {
-    throw Error("Not implemented");
+    let crawler = new Crawler([this.id()]);
+    for (let [_, side] of this.side) {
+      crawler.traverse(side);
+    }
+    for (let [_, node] of crawler.visited) {
+      node.remove();
+    }
+    this.side.clear();
+    this.refresh();
   }
 
   canExpandBottom = (): boolean => {
@@ -148,15 +192,9 @@ export class PersonNode {
       }
     }
   }
-  canCollapseBottom = () => {
-    return true;
-  }
-  collapseBottom = () => {
-    throw Error("Not implemented");
-  }
 }
 
-export class HorizontalLink {
+export class HorizontalLink implements Entity {
   composer: Composer;
   nodes: [PersonNode, PersonNode];
   bottom: Map<string, VerticalLink>;
@@ -168,24 +206,33 @@ export class HorizontalLink {
     this.bottom = new Map<string, VerticalLink>();
     this.html = $("<div class='horizontal-link'>HorizontalLink</div>");
   }
-  remove() {
-    throw Error("Not implemented");
-  }
 
   refresh() {
     
   }
 
-  get id(): string {
-    return mixIds(this.nodes[0].id, this.nodes[1].id);
+  id(): string {
+    return mixIds(this.nodes[0].id(), this.nodes[1].id());
+  }
+  neighbors(): IterableIterator<Entity> {
+    return function* (self: HorizontalLink) {
+      yield self.nodes[0];
+      yield self.nodes[1];
+      for (let [_, bottom] of self.bottom) {
+        yield bottom;
+      }
+    }(this);
+  }
+  remove() {
+    this.composer.removeHorizontal(this);
   }
 
   hasBottom(vlink: VerticalLink) {
-    return this.bottom.has(vlink.id);
+    return this.bottom.has(vlink.id());
   }
   addBottom(vlink: VerticalLink) {
-    if (!this.bottom.has(vlink.id)) {
-      this.bottom.set(vlink.id, vlink);
+    if (!this.bottom.has(vlink.id())) {
+      this.bottom.set(vlink.id(), vlink);
     } else {
       throw Error("Link already exists");
     }
@@ -208,8 +255,12 @@ export class HorizontalLink {
     let common_children = this.commonChildren();
     for (let [id, child] of common_children) {
       let node = this.composer.createNode(child);
-      this.composer.bindVertical(this, node);
+      let vlink = this.composer.bindVertical(this, node);
+      this.addBottom(vlink);
+      node.setTop(vlink);
+      node.refresh();
     }
+    this.refresh();
   }
   canCollapseBottom(): boolean {
     return this.bottom.size > 0;
@@ -219,7 +270,7 @@ export class HorizontalLink {
   }
 }
 
-export class VerticalLink {
+export class VerticalLink implements Entity {
   composer: Composer;
   top: HorizontalLink;
   bottom: PersonNode;
@@ -231,11 +282,17 @@ export class VerticalLink {
     this.bottom = bottom;
     this.html = $("<div class='vertical-link'>VerticalLink</div>");
   }
-  remove() {
-    throw Error("Not implemented");
-  }
 
-  get id(): string {
-    return mixIds(this.top.id, this.bottom.id);
+  id(): string {
+    return mixIds(this.top.id(), this.bottom.id());
+  }
+  neighbors(): IterableIterator<Entity> {
+    return function* (self: VerticalLink) {
+      yield self.top;
+      yield self.bottom;
+    }(this);
+  }
+  remove() {
+    this.composer.removeVertical(this);
   }
 }

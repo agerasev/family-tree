@@ -4,9 +4,9 @@
     "moduleResolution": "node",
     "strictNullChecks": true,
     "strict": true,
-    "target": "ES6",
+    "target": "ES2016",
     "lib": [
-      "ES6",
+      "ES2016",
       "dom"
     ],
 

@@ -26,33 +26,37 @@ export class Composer {
     }
   }
   bindHorizontal(left: PersonNode, right: PersonNode): HorizontalLink {
-    const id = mixIds(left.id, right.id);
+    const id = mixIds(left.id(), right.id());
     if (this.hlinks.has(id)) {
       return this.hlinks.get(id)!;
     } else {
       let hlink = new HorizontalLink(this, left, right);
       this.hlinks.set(id, hlink);
-      left.addSide(hlink);
-      right.addSide(hlink);
       this.html.append(hlink.html);
-      left.refresh();
-      right.refresh();
       return hlink;
     }
   }
   bindVertical(top: HorizontalLink, bottom: PersonNode): VerticalLink {
-    const id = mixIds(top.id, bottom.id);
+    const id = mixIds(top.id(), bottom.id());
     if (this.vlinks.has(id)) {
       return this.vlinks.get(id)!;
     } else {
       let vlink = new VerticalLink(this, top, bottom);
       this.vlinks.set(id, vlink);
-      top.addBottom(vlink);
-      bottom.setTop(vlink);
       this.html.append(vlink.html);
-      top.refresh();
-      bottom.refresh();
       return vlink;
     }
+  }
+  removeNode(node: PersonNode) {
+    node.html.detach();
+    this.nodes.delete(node.id());
+  }
+  removeHorizontal(hlink: HorizontalLink) {
+    hlink.html.detach();
+    this.hlinks.delete(hlink.id());
+  }
+  removeVertical(vlink: VerticalLink) {
+    vlink.html.detach();
+    this.vlinks.delete(vlink.id());
   }
 }
