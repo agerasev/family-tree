@@ -2,7 +2,6 @@
   "compilerOptions": {
     "module": "commonjs",
     "moduleResolution": "node",
-    "sourceMap": true,
     "strictNullChecks": true,
     "strict": true,
     "target": "ES6",
@@ -10,6 +9,11 @@
       "ES6",
       "dom"
     ],
+
     "outDir": "build",
+
+    "sourceMap": false,
+    "inlineSourceMap": true,
+    "inlineSources": true
   }
 }

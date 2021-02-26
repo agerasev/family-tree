@@ -4,8 +4,12 @@ body {
   background-color: #AAAAAA;
 }
 
+.composer-box {
+  border: 1px solid #000000;
+}
+
 .person-box {
-  position: absolute;
+  //position: absolute;
   display: inline-block;
   width: 160px;
   height: 120px;
@@ -14,4 +18,14 @@ body {
   overflow: clip;
   border: 1px solid #000000;
   background-color: #FFFFFF;
+}
+
+.horizontal-link {
+  //position: absolute;
+  display: inline-block;
+}
+
+.vertical-link {
+  //position: absolute;
+  display: inline-block;
 }

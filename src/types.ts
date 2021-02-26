@@ -1,7 +1,7 @@
 import {InName, InPerson, InTree} from "./input";
 import inputTI from "./gen/input-ti";
 import {createCheckers, func} from "ts-interface-checker";
-import {idCheck} from "./id";
+import {idCheck, randomId} from "./id";
 
 const checkers = createCheckers(inputTI);
 
@@ -11,12 +11,30 @@ export class Name {
   patronymic: string | null;
   maiden: string | null;
 
-  constructor(obj: InName) {
+  constructor(
+    family: string,
+    given: string,
+    patronymic?: string,
+    maiden?: string,
+  ) {
+    this.family = family;
+    this.given = given;
+    this.patronymic = patronymic || null;
+    this.maiden = maiden || null;
+  }
+
+  static fromDict(obj: InName): Name {
     checkers.InName.strictCheck(obj);
-    this.family = obj.family;
-    this.given = obj.given;
-    this.patronymic = obj.patronymic || null;
-    this.maiden = obj.maiden || null;
+    return new Name(
+      obj.family,
+      obj.given,
+      obj.patronymic,
+      obj.maiden,
+    );
+  }
+
+  static createUnknown(): Name {
+    return new Name("-", "-");
   }
 
   text(): string {
@@ -30,7 +48,7 @@ export enum Gender {
   Male,
   Female,
 }
-export function makeGender(str: "male" | "female"): Gender {
+export function genderFromText(str: "male" | "female"): Gender {
   switch (str) {
     case "male": {
       return Gender.Male;
@@ -40,24 +58,54 @@ export function makeGender(str: "male" | "female"): Gender {
     }
   }
 }
+export function genderInverse(gender: Gender): Gender {
+  switch (gender) {
+    case Gender.Male:
+      return Gender.Female;
+    case Gender.Female:
+      return Gender.Male;
+  }
+}
 
 export class Person {
+  id: string;
   name: Name;
   gender: Gender;
   parents: {
-    father: Person | null,
-    mother: Person | null,
-  };
+    father: Person,
+    mother: Person,
+  } | null;
   children: Person[];
   has_children_with: Person[];
 
-  constructor(obj: InPerson) {
-    checkers.InPerson.strictCheck(obj);
-    this.name = new Name(obj.name);
-    this.gender = makeGender(obj.gender);
-    this.parents = { father: null, mother: null };
+  constructor(
+    id: string,
+    name: Name,
+    gender: Gender,
+  ) {
+    this.id = id;
+    this.name = name;
+    this.gender = gender;
+    this.parents = null;
     this.children = [];
     this.has_children_with = [];
+  }
+
+  static fromDict(obj: InPerson) {
+    checkers.InPerson.strictCheck(obj);
+    return new Person(
+      obj.id,
+      Name.fromDict(obj.name),
+      genderFromText(obj.gender),
+    );
+  }
+
+  static createUnknown(gender: Gender): Person {
+    return new Person(
+      randomId(),
+      Name.createUnknown(),
+      gender,
+    );
   }
 }
 
@@ -83,26 +131,29 @@ export class Tree {
       if (this.persons.has(id)) {
         throw Error(`Identifier '${id}' already exist`);
       }
-      this.persons.set(id, new Person(in_person));
+      this.persons.set(id, Person.fromDict(in_person));
     }
     for (let in_person of obj.persons) {
       let person = this.getPerson(in_person.id);
       if (in_person.parents !== undefined) {
-        let [father, mother]: [Person | null, Person | null] = [null, null];
+        let father: Person | null = null;
         if (in_person.parents.father !== undefined) {
           father = this.getPerson(in_person.parents.father);
-          person.parents.father = father;
-          father.children.push(person);
+        } else {
+          father = Person.createUnknown(Gender.Male);
         }
+        father.children.push(person);
+
+        let mother: Person | null = null;
         if (in_person.parents.mother !== undefined) {
           mother = this.getPerson(in_person.parents.mother);
-          person.parents.mother = mother;
-          mother.children.push(person);
+        } else {
+          mother = Person.createUnknown(Gender.Female);
         }
-        if (father !== null && mother !== null) {
-          father.has_children_with.push(mother);
-          mother.has_children_with.push(mother);
-        }
+        mother.children.push(person);
+
+        father.has_children_with.push(mother);
+        mother.has_children_with.push(mother);
       }
     }
   }

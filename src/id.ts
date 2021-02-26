@@ -55,3 +55,11 @@ export function mixIds(a: string, b: string): string {
   }
   return idFromArray(output);
 }
+
+export function randomId(): string {
+  let output = new Uint32Array(idBytes / 4);
+  for (let i = 0; i < output.length; ++i) {
+    output[i] = Math.random() * (2 << 32);
+  }
+  return idFromArray(output);
+}
