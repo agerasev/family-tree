@@ -1,11 +1,5 @@
-$person-box-width: 160px;
-$person-box-height: 120px;
-$person-box-padding: 4px;
-$person-container-padding: 24px;
-$person-container-width: $person-box-width + 2 * $person-container-padding;
-$person-container-height: $person-box-height + 2 * $person-container-padding;
-$node-button-size: 16px;
-$person-button-distance: 4px;
+@import "./defs.scss";
+@import "./buttons.scss";
 
 body {
   padding: 0px;
@@ -39,47 +33,8 @@ body {
   background-color: #FFFFFF;
 }
 
-.node-button {
-  position: absolute;
-  display: inline-block;
-  width: $node-button-size;
-  height: $node-button-size;
-  padding: 0;
-  margin: 0;
-  background-color: #FFFFFF;
-  text-align: center;
-  line-height: $node-button-size;
-  font-size: $node-button-size;
-  border-radius: $node-button-size;
-  cursor: pointer;
-  visibility: hidden;
-}
 .person-container:hover .node-button {
   visibility: visible;
-}
-.node-button-hidden {
-  display: none;
-}
-
-.person-expand-top {
-  left: $person-container-width / 2 - $node-button-size - $person-button-distance / 2;
-  top: ($person-container-padding - $node-button-size) / 2;
-}
-.person-collapse-top {
-  left: $person-container-width / 2 + $person-button-distance / 2;
-  top: ($person-container-padding - $node-button-size) / 2;
-}
-.person-expand-side {
-  left: $person-container-width - ($person-container-padding + $node-button-size) / 2;
-  top: $person-container-height / 2 - $node-button-size - $person-button-distance / 2;
-}
-.person-collapse-side {
-  left: $person-container-width - ($person-container-padding + $node-button-size) / 2;
-  top: $person-container-height / 2 + $person-button-distance / 2;
-}
-.person-expand-bottom {
-  left: $person-container-width / 2 - $node-button-size / 2;
-  top: $person-container-height - ($person-container-padding + $node-button-size) / 2;
 }
 
 .horizontal-link {

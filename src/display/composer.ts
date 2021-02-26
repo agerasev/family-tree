@@ -15,11 +15,11 @@ export class Composer {
     this.html = $("<div class='composer-box'></div>");
   }
 
-  createNode(person: Person): PersonNode {
+  createNode(person: Person, position: number, level: number): PersonNode {
     if (this.nodes.has(person.id)) {
       return this.nodes.get(person.id)!;
     } else {
-      let node = new PersonNode(this, person);
+      let node = new PersonNode(this, person, position, level);
       this.nodes.set(person.id, node);
       this.html.append(node.html);
       return node;
