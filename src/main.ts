@@ -1,8 +1,7 @@
 import $ = require("jquery");
 import toml = require("toml");
-import {Tree} from "./types";
-import {Composer} from "./composer";
-import {PersonNode} from "./node";
+import { Composer } from "./display";
+import { Tree } from "./data";
 
 $(function () {
   $.get('data/tree.toml', function (tree_toml) {

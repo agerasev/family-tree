@@ -1,7 +1,6 @@
 import $ = require("jquery");
-import { Person } from "./types";
+import { Person, mixIds } from "../data";
 import { Composer } from "./composer";
-import { mixIds } from "./id";
 
 export class PersonNode {
   composer: Composer;

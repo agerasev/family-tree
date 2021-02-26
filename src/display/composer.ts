@@ -1,7 +1,6 @@
 import $ = require("jquery");
-import { mixIds } from "./id";
+import { Person, mixIds } from "../data";
 import { PersonNode, HorizontalLink, VerticalLink } from "./node";
-import { Person } from "./types";
 
 export class Composer {
   nodes: Map<string, PersonNode>;

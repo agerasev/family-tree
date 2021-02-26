@@ -1,5 +1,5 @@
 import {InName, InPerson, InTree} from "./input";
-import inputTI from "./gen/input-ti";
+import inputTI from "../gen/input-ti";
 import {createCheckers, func} from "ts-interface-checker";
 import {idCheck, randomId} from "./id";
 
@@ -151,6 +151,8 @@ export class Tree {
           mother = Person.createUnknown(Gender.Female);
         }
         mother.children.push(person);
+
+        person.parents = { father, mother }
 
         father.has_children_with.push(mother);
         mother.has_children_with.push(mother);
