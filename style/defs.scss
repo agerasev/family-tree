@@ -4,5 +4,17 @@ $person-box-padding: 4px;
 $person-container-padding: 24px;
 $person-container-width: $person-box-width + 2 * $person-container-padding;
 $person-container-height: $person-box-height + 2 * $person-container-padding;
+
 $node-button-size: 16px;
-$person-button-distance: 4px;
+$node-button-distance: 4px;
+
+$person-vertical-distance: 48px;
+$person-horizontal-distance: 64px;
+$person-vertical-step: $person-container-height + $person-vertical-distance;
+$person-horizontal-step: $person-container-width + $person-horizontal-distance;
+
+
+$stroke-width: 1;
+$link-margin: 4px;
+$horizontal-link-height: 32px;
+$vertical-link-height: $person-vertical-distance + 2 * $person-container-padding - $horizontal-link-height;

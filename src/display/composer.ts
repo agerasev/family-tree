@@ -1,6 +1,7 @@
 import $ = require("jquery");
 import { Person, mixIds } from "../data";
 import { PersonNode, HorizontalLink, VerticalLink } from "./elements";
+import style from "../gen/style-defs";
 
 export class Composer {
   nodes: Map<string, PersonNode>;
@@ -22,6 +23,7 @@ export class Composer {
       let node = new PersonNode(this, person, position, level);
       this.nodes.set(person.id, node);
       this.html.append(node.html);
+      node.updatePosition();
       return node;
     }
   }
@@ -33,6 +35,7 @@ export class Composer {
       let hlink = new HorizontalLink(this, left, right);
       this.hlinks.set(id, hlink);
       this.html.append(hlink.html);
+      hlink.updatePosition();
       return hlink;
     }
   }
@@ -44,6 +47,7 @@ export class Composer {
       let vlink = new VerticalLink(this, top, bottom);
       this.vlinks.set(id, vlink);
       this.html.append(vlink.html);
+      vlink.updatePosition();
       return vlink;
     }
   }
@@ -58,5 +62,18 @@ export class Composer {
   removeVertical(vlink: VerticalLink) {
     vlink.html.detach();
     this.vlinks.delete(vlink.id());
+  }
+
+  vsizeToPx(vsize: number): number {
+    return parseFloat(style.personVerticalStep) * vsize;
+  }
+  vposToPx(vpos: number): number {
+    return this.vsizeToPx(vpos);
+  }
+  hsizeToPx(hsize: number): number {
+    return parseFloat(style.personHorizontalStep) * hsize;
+  }
+  hposToPx(hpos: number): number {
+    return this.hsizeToPx(hpos);
   }
 }

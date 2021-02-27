@@ -21,34 +21,41 @@
 }
 
 .person-expand-top {
-  left: $person-container-width / 2 - $node-button-size - $person-button-distance / 2;
+  left: $person-container-width / 2 - $node-button-size - $node-button-distance / 2;
   top: ($person-container-padding - $node-button-size) / 2;
 }
 .person-collapse-top {
-  left: $person-container-width / 2 + $person-button-distance / 2;
+  left: $person-container-width / 2 + $node-button-distance / 2;
   top: ($person-container-padding - $node-button-size) / 2;
 }
 .person-expand-bottom {
-  left: $person-container-width / 2 - $node-button-size - $person-button-distance / 2;
+  left: $person-container-width / 2 - $node-button-size - $node-button-distance / 2;
   top: $person-container-height - ($person-container-padding + $node-button-size) / 2;
 }
 .person-collapse-bottom {
-  left: $person-container-width / 2 + $person-button-distance / 2;
+  left: $person-container-width / 2 + $node-button-distance / 2;
   top: $person-container-height - ($person-container-padding + $node-button-size) / 2;
 }
 .person-expand-left {
   left: ($person-container-padding - $node-button-size) / 2;
-  top: $person-container-height / 2 - $node-button-size - $person-button-distance / 2;
+  top: $person-container-height / 2 - $node-button-size - $node-button-distance / 2;
 }
 .person-collapse-left {
   left: ($person-container-padding - $node-button-size) / 2;
-  top: $person-container-height / 2 + $person-button-distance / 2;
+  top: $person-container-height / 2 + $node-button-distance / 2;
 }
 .person-expand-right {
   left: $person-container-width - ($person-container-padding + $node-button-size) / 2;
-  top: $person-container-height / 2 - $node-button-size - $person-button-distance / 2;
+  top: $person-container-height / 2 - $node-button-size - $node-button-distance / 2;
 }
 .person-collapse-right {
   left: $person-container-width - ($person-container-padding + $node-button-size) / 2;
-  top: $person-container-height / 2 + $person-button-distance / 2;
+  top: $person-container-height / 2 + $node-button-distance / 2;
+}
+
+.horizontal-link-expand-bottom {
+  top: $horizontal-link-height - ($node-button-size + $node-button-distance);
+}
+.horizontal-link-collapse-bottom {
+  top: $horizontal-link-height - ($node-button-size + $node-button-distance);
 }

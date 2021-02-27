@@ -2,18 +2,20 @@
 @import "./buttons.scss";
 
 body {
-  padding: 0px;
-  margin: 4px;
+  padding: 0;
+  margin: 0;
   background-color: #AAAAAA;
 }
 
 .composer-box {
   border: 1px solid #000000;
+  //scale: 0.5;
 }
 
 .person-container {
   position: absolute;
   display: inline-block;
+  z-index: 3;
   left: 120px;
   top: 120px;
   width: $person-container-width;
@@ -38,11 +40,25 @@ body {
 }
 
 .horizontal-link {
-  //position: absolute;
+  position: absolute;
   display: inline-block;
+  z-index: 2;
+  height: $horizontal-link-height + $link-margin;
+  margin: 0;
+  padding: 0;
+  background-color: rgba(0,0,0,0.2);
 }
 
 .vertical-link {
-  //position: absolute;
+  position: absolute;
   display: inline-block;
+  z-index: 1;
+  height: $vertical-link-height;
+  margin: 0;
+  padding: 0;
+  background-color: rgba(0,0,0,0.2);
+}
+
+.horizontal-link:hover .node-button {
+  visibility: visible;
 }
