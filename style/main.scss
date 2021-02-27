@@ -1,10 +1,18 @@
 @import "./defs.scss";
 @import "./buttons.scss";
 
+@font-face {
+  font-family: "NotoSansEmbedded";
+  src:
+    url('/fonts/noto-sans-v11-regular.woff2') format('woff2'),
+    url('/fonts/noto-sans-v11-regular.woff') format('woff');
+}
+
 body {
   padding: 0;
   margin: 0;
   background-color: #AAAAAA;
+  font-family: "NotoSansEmbedded", "Noto Sans", sans-serif;
 }
 
 .composer-box {
@@ -20,7 +28,7 @@ body {
   top: 120px;
   width: $person-container-width;
   height: $person-container-height;
-  background-color: rgba(0,0,0,0.1);
+  //background-color: rgba(0,0,0,0.1);
 }
 
 .person-box {
@@ -46,7 +54,7 @@ body {
   height: $horizontal-link-height + $link-margin;
   margin: 0;
   padding: 0;
-  background-color: rgba(0,0,0,0.2);
+  //background-color: rgba(0,0,0,0.2);
 }
 
 .vertical-link {
@@ -56,7 +64,7 @@ body {
   height: $vertical-link-height;
   margin: 0;
   padding: 0;
-  background-color: rgba(0,0,0,0.2);
+  //background-color: rgba(0,0,0,0.2);
 }
 
 .horizontal-link:hover .node-button {

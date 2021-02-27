@@ -8,13 +8,13 @@ $person-container-height: $person-box-height + 2 * $person-container-padding;
 $node-button-size: 16px;
 $node-button-distance: 4px;
 
-$person-vertical-distance: 48px;
+$person-vertical-distance: 24px;
 $person-horizontal-distance: 64px;
 $person-vertical-step: $person-container-height + $person-vertical-distance;
 $person-horizontal-step: $person-container-width + $person-horizontal-distance;
 
 
-$stroke-width: 1;
+$stroke-width: 1.5px;
 $link-margin: 4px;
 $horizontal-link-height: 32px;
 $vertical-link-height: $person-vertical-distance + 2 * $person-container-padding - $horizontal-link-height;

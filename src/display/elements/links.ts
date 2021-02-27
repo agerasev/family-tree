@@ -72,8 +72,14 @@ export class HorizontalLink implements Entity {
         ${px_margin + px_width} ${0}
     `);
 
-    this.buttons[0].html.css("left", (0.5 * px_width - parseFloat(style.nodeButtonSize) - 0.5 * parseFloat(style.nodeButtonDistance)) + "px");
-    this.buttons[1].html.css("left", (0.5 * px_width + 0.5 * parseFloat(style.nodeButtonDistance)) + "px");
+    this.buttons[0].html.css(
+      "left",
+      (px_margin + 0.5 * px_width - parseFloat(style.nodeButtonSize) - 0.5 * parseFloat(style.nodeButtonDistance)) + "px",
+    );
+    this.buttons[1].html.css(
+      "left",
+      (px_margin + 0.5 * px_width + 0.5 * parseFloat(style.nodeButtonDistance)) + "px",
+    );
   }
 
   id(): string {
@@ -168,7 +174,7 @@ export class VerticalLink implements Entity {
     this.html = $(`
     <div class='vertical-link'>
       <svg xmlns='http://www.w3.org/2000/svg'>
-        <path d='' fill='transparent' stroke='black' stroke-width='1'/>
+        <path d='' fill='transparent' stroke='black' stroke-width='${stroke_width}'/>
       </svg>
     </div>
     `);
