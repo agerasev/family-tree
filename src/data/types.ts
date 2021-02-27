@@ -76,7 +76,7 @@ export class Person {
     mother: Person,
   } | null;
   children: Person[];
-  has_children_with: Person[];
+  has_children_with: Map<string, Person>;
 
   constructor(
     id: string,
@@ -88,7 +88,7 @@ export class Person {
     this.gender = gender;
     this.parents = null;
     this.children = [];
-    this.has_children_with = [];
+    this.has_children_with = new Map<string, Person>();
   }
 
   static fromDict(obj: InPerson) {
@@ -154,8 +154,8 @@ export class Tree {
 
         person.parents = { father, mother }
 
-        father.has_children_with.push(mother);
-        mother.has_children_with.push(father);
+        father.has_children_with.set(mother.id, mother);
+        mother.has_children_with.set(father.id, father);
       }
     }
   }

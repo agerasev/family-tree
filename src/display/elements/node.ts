@@ -136,12 +136,12 @@ export class PersonNode implements Entity {
   }
 
   canExpandSide(): boolean {
-    return this.person.has_children_with.length > this.side.size;
+    return this.person.has_children_with.size > this.side.size;
   }
   expandSide(dir: number) {
     let counter = dir;
-    for (let person of this.person.has_children_with) {
-      if (!this.side.has(mixIds(this.id(), person.id))) {
+    for (let [id, person] of this.person.has_children_with) {
+      if (!this.side.has(mixIds(this.id(), id))) {
         let node = this.composer.createNode(person, this.position + counter, this.level);
         let hlink = this.composer.bindHorizontal(this, node);
         this.addSide(hlink);

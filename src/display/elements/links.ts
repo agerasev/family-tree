@@ -110,12 +110,15 @@ export class HorizontalLink implements Entity {
   }
 
   commonChildren(): Map<string, Person> {
+    let left_children = new Set<string>();
     let common_children = new Map<string, Person>();
     for (let left_child of this.nodes[0].person.children) {
-      common_children.set(left_child.id, left_child);
+      left_children.add(left_child.id);
     }
     for (let right_child of this.nodes[1].person.children) {
-      common_children.set(right_child.id, right_child);
+      if (left_children.has(right_child.id)) {
+        common_children.set(right_child.id, right_child);
+      }
     }
     return common_children;
   }
@@ -128,6 +131,9 @@ export class HorizontalLink implements Entity {
     let center = 0.5 * (this.nodes[0].position + this.nodes[1].position);
     let position = center - 0.5 * (common_children.size - 1);
     for (let [id, child] of common_children) {
+      if (this.bottom.has(mixIds(id, this.id()))) {
+        continue;
+      }
       let node = this.composer.createNode(child, position, level);
       let vlink = this.composer.bindVertical(this, node);
       this.addBottom(vlink);

@@ -13,6 +13,10 @@ export interface InPerson {
     father?: string,
     mother?: string,
   },
+  birth?: {
+    date?: string,
+    place?: string[],
+  },
 }
 
 export interface InTree {
