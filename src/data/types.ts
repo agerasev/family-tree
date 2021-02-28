@@ -156,6 +156,9 @@ export class Tree {
         let father: Person | null = null;
         if (in_person.parents.father !== undefined) {
           father = this.getPerson(in_person.parents.father);
+          if (father.gender !== Gender.Male) {
+            throw Error("Gender mismatch");
+          }
         } else {
           father = Person.createUnknown(Gender.Male);
         }
@@ -164,6 +167,9 @@ export class Tree {
         let mother: Person | null = null;
         if (in_person.parents.mother !== undefined) {
           mother = this.getPerson(in_person.parents.mother);
+          if (mother.gender !== Gender.Female) {
+            throw Error("Gender mismatch");
+          }
         } else {
           mother = Person.createUnknown(Gender.Female);
         }
