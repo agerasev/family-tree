@@ -11,13 +11,29 @@
 body {
   padding: 0;
   margin: 0;
-  background-color: #AAAAAA;
   font-family: "NotoSansEmbedded", "Noto Sans", sans-serif;
 }
 
-.composer-box {
-  border: 1px solid #000000;
-  //scale: 0.5;
+.composer-container {
+  position: absolute;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  background-color: #AAAAAA;
+}
+
+.composer-anchor {
+  position: absolute;
+  display: inline-block;
+  width: 0;
+  height: 0;
+  padding: 0;
+  margin: 0;
+  border: 2px solid #FF00FF;
+  scale: 1.0;
 }
 
 .person-container {
