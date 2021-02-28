@@ -81,6 +81,9 @@ export class HorizontalLink implements Entity {
       (px_margin + 0.5 * px_width + 0.5 * parseFloat(style.nodeButtonDistance)) + "px",
     );
   }
+  center(): number {
+    return 0.5 * (this.nodes[0].position + this.nodes[1].position);
+  }
 
   id(): string {
     return mixIds(this.nodes[0].id(), this.nodes[1].id());
@@ -188,7 +191,7 @@ export class VerticalLink implements Entity {
   }
 
   updatePosition() {
-    let top_center = 0.5 * (this.top.nodes[0].position + this.top.nodes[1].position);
+    let top_center = this.top.center();
     let bottom_center = this.bottom.position;
     let left = Math.min(top_center, bottom_center);
     let width = Math.abs(top_center - bottom_center);

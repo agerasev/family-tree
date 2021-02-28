@@ -42,9 +42,9 @@ export class PersonNode implements Entity {
       [this.canExpandBottom, this.expandBottom, "person-expand-bottom", "+"],
       [this.canCollapseBottom, this.collapseBottom, "person-collapse-bottom", "−"],
       [this.canExpandSide, () => this.expandSide(-1), "person-expand-left", "+"],
+      [this.canCollapseSide, () => this.collapseSide(-1), "person-collapse-left", "−"],
       [this.canExpandSide, () => this.expandSide(1), "person-expand-right", "+"],
-      [this.canCollapseSide, this.collapseSide, "person-collapse-left", "−"],
-      [this.canCollapseSide, this.collapseSide, "person-collapse-right", "−"],
+      [this.canCollapseSide, () => this.collapseSide(1), "person-collapse-right", "−"],
     ];
     this.buttons = [];
     for (let [check, run, css_class, text] of buttons_info) {
@@ -154,15 +154,25 @@ export class PersonNode implements Entity {
   canCollapseSide() {
     return this.side.size > 0;
   }
-  collapseSide() {
+  collapseSide(dir: number) {
     let crawler = new Crawler([this.id()]);
+    let max_dist = null;
+    let max_side = null;
     for (let [_, side] of this.side) {
-      crawler.traverse(side);
+      let pos = dir * side.center();
+      if (max_dist === null || pos > max_dist) {
+        max_dist = pos;
+        max_side = side;
+      }
     }
+    if (max_side === null) {
+      return;
+    }
+    crawler.traverse(max_side);
     for (let [_, node] of crawler.visited) {
       node.remove();
     }
-    this.side.clear();
+    this.side.delete(max_side.id());
     this.updateButtons();
   }
 
@@ -179,7 +189,11 @@ export class PersonNode implements Entity {
     }
   }
   expandBottom() {
-    this.expandSide(1);
+    let dir = 1;
+    while (this.canExpandSide()) {
+      this.expandSide(dir);
+      dir = -dir;
+    }
     for (let [_, hlink] of this.side) {
       if (hlink.canExpandBottom()) {
         hlink.expandBottom();
