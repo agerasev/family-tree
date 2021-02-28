@@ -1,7 +1,7 @@
 import { PersonNode, HorizontalLink, VerticalLink } from "../display";
 
 export interface Solver {
-  step(time?: number): boolean,
+  step(dt?: number): boolean,
   updateRefs(): void,
 }
 
