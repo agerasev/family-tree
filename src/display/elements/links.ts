@@ -1,6 +1,6 @@
 import $ = require("jquery");
 import { Person, mixIds } from "../../data";
-import { Composer } from "../composer";
+import { Composer, side_shift } from "../composer";
 import { Entity, NodeButton } from "./base";
 import { PersonNode } from "./node";
 import style from "../../gen/style-defs";
@@ -129,7 +129,7 @@ export class HorizontalLink implements Entity {
     let common_children = this.commonChildren();
     let level = Math.max(this.nodes[0].level, this.nodes[1].level) + 1;
     let center = 0.5 * (this.nodes[0].position + this.nodes[1].position);
-    let position = center - 0.5 * (common_children.size - 1);
+    let position = center - 0.5 * side_shift * (common_children.size - 1);
     for (let [id, child] of common_children) {
       if (this.bottom.has(mixIds(id, this.id()))) {
         continue;
@@ -139,7 +139,7 @@ export class HorizontalLink implements Entity {
       this.addBottom(vlink);
       node.setTop(vlink);
       node.updateButtons();
-      position += 1;
+      position += side_shift;
     }
     this.updateButtons();
     this.nodes[0].updateButtons();

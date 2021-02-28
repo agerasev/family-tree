@@ -1,6 +1,6 @@
 import $ = require("jquery");
 import { Person, mixIds } from "../../data";
-import { Composer } from "../composer";
+import { Composer, side_shift } from "../composer";
 import { Crawler } from "../crawler";
 import { HorizontalLink, VerticalLink } from "./links";
 import { Entity, NodeButton } from "./base";
@@ -105,8 +105,8 @@ export class PersonNode implements Entity {
     return this.top === null && this.person.parents !== null;
   }
   expandTop() {
-    let father = this.composer.createNode(this.person.parents!.father, this.position - 0.5, this.level - 1);
-    let mother = this.composer.createNode(this.person.parents!.mother, this.position + 0.5, this.level - 1);
+    let father = this.composer.createNode(this.person.parents!.father, this.position - 0.5 * side_shift, this.level - 1);
+    let mother = this.composer.createNode(this.person.parents!.mother, this.position + 0.5 * side_shift, this.level - 1);
     let hlink = this.composer.bindHorizontal(father, mother);
     let vlink = this.composer.bindVertical(hlink, this);
 
@@ -139,15 +139,14 @@ export class PersonNode implements Entity {
     return this.person.has_children_with.size > this.side.size;
   }
   expandSide(dir: number) {
-    let counter = dir;
     for (let [id, person] of this.person.has_children_with) {
       if (!this.side.has(mixIds(this.id(), id))) {
-        let node = this.composer.createNode(person, this.position + counter, this.level);
+        let node = this.composer.createNode(person, this.position + dir * side_shift, this.level);
         let hlink = this.composer.bindHorizontal(this, node);
         this.addSide(hlink);
         node.addSide(hlink);
         node.updateButtons();
-        counter += dir;
+        break;
       }
     }
     this.updateButtons();

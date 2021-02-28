@@ -2,6 +2,9 @@ import $ = require("jquery");
 import { Person, mixIds } from "../data";
 import { PersonNode, HorizontalLink, VerticalLink } from "./elements";
 import style from "../gen/style-defs";
+import { Layout, Solver } from "../layouts";
+
+export const side_shift = 0.1;
 
 export class Composer {
   nodes: Map<string, PersonNode>;
@@ -9,6 +12,12 @@ export class Composer {
   vlinks: Map<string, VerticalLink>;
   html: JQuery<HTMLElement>;
   anchor: JQuery<HTMLElement>;
+  
+  layout: Layout;
+  solver: Solver | null = null;
+  dirty: boolean = false;
+  loop: number | null = null;
+  delay: number = 0.04;
 
   width: number;
   height: number;
@@ -16,7 +25,7 @@ export class Composer {
   zoom: number;
   drag: boolean;
 
-  constructor(parent: JQuery<HTMLElement>) {
+  constructor(parent: JQuery<HTMLElement>, layout: Layout) {
     this.nodes = new Map<string, PersonNode>();
     this.hlinks = new Map<string, HorizontalLink>();
     this.vlinks = new Map<string, VerticalLink>();
@@ -29,10 +38,12 @@ export class Composer {
     this.anchor = this.html.find(".composer-anchor");
     parent.append(this.html);
 
+    this.layout = layout;
+
     [this.width, this.height] = [0, 0];
     this.position = [ 0.0, 0.0 ];
     this.zoom = 1.0;
-    this.updateViewport();
+    this.updateScreen();
 
     this.html[0].onwheel = (e: WheelEvent) => {
       e.preventDefault();
@@ -70,17 +81,17 @@ export class Composer {
       (y - this.position[1]) / this.zoom + 0.5 * this.height,
     ];
   }
-  updatePosition() {
+  updateViewport() {
     let [cx, cy] = this.viewportToScreen([0.0, 0.0]);
     this.anchor.css("left", cx + "px");
     this.anchor.css("top", cy + "px");
     this.anchor.css("scale", (1.0 / this.zoom).toString());
   }
-  updateViewport() {
+  updateScreen() {
     let rect = this.html[0].getBoundingClientRect();
     this.width = rect.width;
     this.height = rect.height;
-    this.updatePosition();
+    this.updateViewport();
   }
 
   onZoom(delta: number, [sx, sy] : [number, number]) {
@@ -89,12 +100,12 @@ export class Composer {
     this.position[0] += (sx - 0.5 * this.width) * dz;
     this.position[1] += (sy - 0.5 * this.height) * dz;
     this.zoom = zoom;
-    this.updatePosition();
+    this.updateViewport();
   }
   onShift([dx, dy]: [number, number]) {
     this.position[0] -= dx * this.zoom;
     this.position[1] -= dy * this.zoom;
-    this.updatePosition();
+    this.updateViewport();
   }
 
   createNode(person: Person, position: number, level: number): PersonNode {
@@ -105,6 +116,7 @@ export class Composer {
       this.nodes.set(person.id, node);
       this.anchor.append(node.html);
       node.updatePosition();
+      this.updateSolver();
       return node;
     }
   }
@@ -117,6 +129,7 @@ export class Composer {
       this.hlinks.set(id, hlink);
       this.anchor.append(hlink.html);
       hlink.updatePosition();
+      this.updateSolver();
       return hlink;
     }
   }
@@ -129,20 +142,24 @@ export class Composer {
       this.vlinks.set(id, vlink);
       this.anchor.append(vlink.html);
       vlink.updatePosition();
+      this.updateSolver();
       return vlink;
     }
   }
   removeNode(node: PersonNode) {
     node.html.detach();
     this.nodes.delete(node.id());
+    this.updateSolver();
   }
   removeHorizontal(hlink: HorizontalLink) {
     hlink.html.detach();
     this.hlinks.delete(hlink.id());
+    this.updateSolver();
   }
   removeVertical(vlink: VerticalLink) {
     vlink.html.detach();
     this.vlinks.delete(vlink.id());
+    this.updateSolver();
   }
 
   vsizeToPx(vsize: number): number {
@@ -156,5 +173,40 @@ export class Composer {
   }
   hposToPx(hpos: number): number {
     return this.hsizeToPx(hpos);
+  }
+
+  updateSolver() {
+    this.dirty = true;
+    if (this.loop === null) {
+      this.loop = setInterval(this.solveCallback.bind(this), 1000.0 * this.delay);
+    }
+  }
+  stopSolver() {
+    if (this.loop !== null) {
+      clearInterval(this.loop);
+      this.loop = null;
+    }
+  }
+  solveCallback() {
+    if (this.loop === null) {
+      return;
+    }
+    try {
+      if (this.dirty) {
+        this.solver = this.layout.createSolver(this.nodes, this.hlinks, this.vlinks);
+        this.dirty = false;
+      }
+      if (this.solver === null) {
+        throw Error("Solver is null");
+      }
+      if (!this.solver.step(this.delay)) {
+        this.stopSolver();
+      }
+      this.solver.updateRefs();
+      this.updateViewport();
+    } catch (e) {
+      this.stopSolver();
+      throw e;
+    }
   }
 }
