@@ -17,6 +17,7 @@ export interface InPerson {
     date?: string,
     place?: string[],
   },
+  image?: string,
 }
 
 export interface InTree {

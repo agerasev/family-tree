@@ -77,11 +77,13 @@ export class Person {
   } | null;
   children: Person[];
   has_children_with: Map<string, Person>;
+  image: string;
 
   constructor(
     id: string,
     name: Name,
     gender: Gender,
+    image?: string,
   ) {
     this.id = id;
     this.name = name;
@@ -89,6 +91,20 @@ export class Person {
     this.parents = null;
     this.children = [];
     this.has_children_with = new Map<string, Person>();
+    if (image !== undefined) {
+      this.image = "/data/" + image;
+    } else {
+      switch (gender) {
+        case Gender.Male: {
+          this.image = "/images/unknown-male.jpg";
+          break;
+        }
+        case Gender.Female: {
+          this.image = "/images/unknown-female.jpg";
+          break;
+        }
+      }
+    }
   }
 
   static fromDict(obj: InPerson) {
@@ -97,6 +113,7 @@ export class Person {
       obj.id,
       Name.fromDict(obj.name),
       genderFromText(obj.gender),
+      obj.image,
     );
   }
 

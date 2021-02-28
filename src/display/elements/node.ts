@@ -32,6 +32,7 @@ export class PersonNode implements Entity {
     this.html = $(`
       <div class='person-container' style='left: 0px; top: 0px;'>
         <div class='person-box'>
+          <img class='person-image' src='${this.person.image}'/>
           <div>${this.person.name.text()}</div>
         </div>
       </div>

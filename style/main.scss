@@ -40,8 +40,6 @@ body {
   position: absolute;
   display: inline-block;
   z-index: 3;
-  left: 120px;
-  top: 120px;
   width: $person-container-width;
   height: $person-container-height;
   //background-color: rgba(0,0,0,0.1);
@@ -57,6 +55,12 @@ body {
   padding: $person-box-padding;
   overflow: clip;
   background-color: #FFFFFF;
+}
+
+.person-image {
+  width: 96px;
+  height: 96px;
+  float: left;
 }
 
 .person-container:hover .node-button {

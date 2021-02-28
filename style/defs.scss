@@ -1,18 +1,18 @@
-$person-box-width: 160px;
+$person-box-width: 240px;
 $person-box-height: 120px;
 $person-box-padding: 4px;
 $person-container-padding: 24px;
 $person-container-width: $person-box-width + 2 * $person-container-padding;
 $person-container-height: $person-box-height + 2 * $person-container-padding;
+$person-image-size: 64px;
 
 $node-button-size: 16px;
 $node-button-distance: 4px;
 
 $person-vertical-distance: 24px;
-$person-horizontal-distance: 64px;
+$person-horizontal-distance: 32px;
 $person-vertical-step: $person-container-height + $person-vertical-distance;
 $person-horizontal-step: $person-container-width + $person-horizontal-distance;
-
 
 $stroke-width: 1.5px;
 $link-margin: 4px;
