@@ -2,6 +2,8 @@ import { Layout, Solver } from "./base";
 import { PersonNode, HorizontalLink, VerticalLink } from "../display";
 import { func } from "ts-interface-checker";
 
+const maxVel = 1.0;
+
 const abs = Math.abs;
 const max = Math.max;
 const min = Math.min;
@@ -9,7 +11,7 @@ function clamp(a: number, l: number, h: number) {
   return min(max(a, l), h);
 }
 
-type Elast = {
+export type Elast = {
   node: number,
   hor: number,
   ver: number,
@@ -17,34 +19,47 @@ type Elast = {
   ver_inter: number,
 };
 
-const globalElast = {
-  ver: 0.1,
-  hor: 0.2,
-  node: 1.0,
-  hor_inter: 10.0,
-  ver_inter: 10.0,
-};
-
-/*
-function elastByTime(time: number): Elast {
-  let w = null;
-  time *= 3.0;
-  if (time >= 0.0 && time <= 1.0) {
-    w = [time, 1.0 - time];
-  } else if (time >= 1.0 && time <= 2.0) {
-    w = [2.0 - time, time - 1.0];
-  } else if (time >= 2.0 && time <= 3.0) {
-    w = [0.0, 1.0];
-  } else {
-    throw Error("Time is out of bounds");
-  }
-  return {
-    node: w[0] * 0.1 + w[1] * 2.0,
-    hor: w[0] * 2.0 + w[1] * 0.2,
-    ver: w[0] * 1.0 + w[1] * 0.1,
-  };
+export interface Scenario {
+  time: number,
+  elastByTime(time: number): Elast,
 }
-*/
+
+export class UpdateScenario implements Scenario {
+  time: number = 8;
+  elastByTime(time: number): Elast {
+    return {
+      node: 1.0,
+      hor: 0.2,
+      ver: 0.1,
+      hor_inter: 5.0,
+      ver_inter: 5.0,
+    };
+  }
+}
+
+export class RearrangeScenaio implements Scenario {
+  time: number = 12;
+  elastByTime(time: number): Elast {
+    let w = null;
+    time = 3.0 * time / this.time;
+    if (time >= 0.0 && time <= 1.0) {
+      w = [1.0, 0.0];
+    } else if (time >= 1.0 && time <= 2.0) {
+      w = [2.0 - time, time - 1.0];
+    } else if (time >= 2.0 && time <= 3.0) {
+      w = [0.0, 1.0];
+    } else {
+      throw Error("Time is out of bounds");
+    }
+    return {
+      node: w[0] * 0.1 + w[1] * 2.0,
+      hor: w[0] * 2.0 + w[1] * 0.2,
+      ver: w[0] * 0.1 + w[1] * 0.1,
+      hor_inter: w[0] * 5.0 + w[1] * 0.1,
+      ver_inter: w[0] * 5.0 + w[1] * 0.1,
+    };
+  }
+}
 
 class NodeState {
   ref: PersonNode;
@@ -65,7 +80,7 @@ class NodeState {
     this.vel += f / this.mass;
   }
   step(dt: number) {
-    this.pos += this.vel * dt;
+    this.pos += clamp(this.vel, -maxVel, maxVel) * dt;
     this.vel = 0.0;
   }
   updateRef() {
@@ -98,24 +113,28 @@ class HLinkState {
   }
 
   applyForce(f: number) {
-    const m = this.nodes[0].mass + this.nodes[1].mass;
-    const w = [this.nodes[0].mass / m, this.nodes[1].mass / m];
-    this.nodes[0].applyForce(w[0] * f);
-    this.nodes[1].applyForce(w[1] * f);
+    this.applyForceWeighted(f, [this.nodes[0].mass, this.nodes[1].mass]);
+  }
+  applyForceWeighted(f: number, w: [number, number]) {
+    const ws = w[0] + w[1];
+    this.nodes[0].applyForce((w[0] / ws) * f);
+    this.nodes[1].applyForce((w[1] / ws) * f);
   }
   act(elast: number) {
     let d = (this.nodes[0].pos - this.nodes[1].pos);
-    const l = abs(d);
-    const cl = 1.0;
-    d /= l;
-    const f = elast * d * clamp(cl - l, -1.0, 1.0);
-    this.nodes[0].applyForce(f);
-    this.nodes[1].applyForce(-f);
+    const f = elast * clamp(d, -1.0, 1.0);
+    this.nodes[0].applyForce(-f);
+    this.nodes[1].applyForce(f);
   }
   intersect(other: HLinkState, elast: number) {
-    let d = this.center() - other.center();
+    if (this.hasCommonNode(other)) {
+      return;
+    }
+    const [tc, oc] = [this.center(), other.center()];
+    const [ts, os] = [this.size(), other.size()];
+    let d = tc - oc;
     let l = abs(d);
-    let r = 0.5 * (this.size() + other.size()) + 1.0;
+    let r = 0.5 * (ts + os) + 1.0;
     if (l < r) {
       d /= l;
       const f = elast * d * (r - l);
@@ -128,11 +147,17 @@ class HLinkState {
         this_node = this.nodesSorted()[1];
         other_node = other.nodesSorted()[0];
       }
-      if (this_node !== other_node) {
-        this_node.applyForce(f);
-        other_node.applyForce(-f);
-      }
+      this_node.applyForce(f);
+      other_node.applyForce(-f);
     }
+  }
+  hasCommonNode(other: HLinkState): boolean {
+    return (
+      this.nodes[0] === other.nodes[0] ||
+      this.nodes[0] === other.nodes[1] ||
+      this.nodes[1] === other.nodes[0] ||
+      this.nodes[1] === other.nodes[1]
+    );
   }
   nodesSorted(): [NodeState, NodeState] {
     if (this.nodes[0].pos <= this.nodes[1].pos) {
@@ -220,10 +245,12 @@ export class SpringSolver implements Solver {
   hlink_levels: Map<number, HLinkState[]>;
   vlink_levels: Map<number, VLinkState[]>;
 
+  scenario: Scenario;
   time: number = 0.0;
-  total_time: number = 8.0;
 
-  constructor(nodes: Map<string, NodeState>, hlinks: Map<string, HLinkState>, vlinks: Map<string, VLinkState>) {
+  constructor(scenario: Scenario, nodes: Map<string, NodeState>, hlinks: Map<string, HLinkState>, vlinks: Map<string, VLinkState>) {
+    this.scenario = scenario;
+
     this.nodes = nodes;
     this.hlinks = hlinks;
     this.vlinks = vlinks;
@@ -249,10 +276,10 @@ export class SpringSolver implements Solver {
     if (dt === undefined) {
       throw Error("Time step must be defined");
     }
-    if (this.time >= this.total_time) {
+    if (this.time >= this.scenario.time) {
       return false;
     }
-    const elast = globalElast;
+    const elast = this.scenario.elastByTime(this.time);
 
     for (let [_, nodes] of this.node_levels) {
       forEachPair(nodes, (a, b) => a.interact(b, elast.node));
@@ -320,6 +347,6 @@ export class SpringLayout implements Layout {
       ));
     }
 
-    return new SpringSolver(nodes, hlinks, vlinks);
+    return new SpringSolver(new UpdateScenario(), nodes, hlinks, vlinks);
   }
 }
