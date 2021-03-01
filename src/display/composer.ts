@@ -22,8 +22,12 @@ export class Composer {
   width: number;
   height: number;
   position: [number, number];
-  zoom: number;
-  drag: boolean;
+  zoom: number = 1.0;
+  drag: boolean = false;
+  node_drag: {
+    id: string;
+    pos: number;
+  } | null = null;
 
   constructor(parent: JQuery<HTMLElement>, layout: Layout) {
     this.nodes = new Map<string, PersonNode>();
@@ -50,7 +54,6 @@ export class Composer {
       this.onZoom(e.deltaY, [e.clientX, e.clientY]);
     };
 
-    this.drag = false;
     this.html[0].onmousedown = (e: MouseEvent) => {
       e.preventDefault();
       this.drag = true;
@@ -58,14 +61,48 @@ export class Composer {
     let leaveCallback = (e: MouseEvent) => {
       e.preventDefault();
       this.drag = false;
+      this.node_drag = null;
     };
     this.html[0].onmouseup = leaveCallback;
     this.html[0].onmouseleave = leaveCallback;
+
     this.html[0].onmousemove = (e: MouseEvent) => {
       if (this.drag) {
         e.preventDefault();
-        this.onShift([e.movementX, e.movementY]);
+        if (this.node_drag === null) {
+          this.onShift([e.movementX, e.movementY]);
+        } else {
+          this.node_drag.pos = this.screenToNodePos(e.clientX);
+        }
       }
+    };
+  }
+  static node_step = parseFloat(style.personHorizontalStep);
+  screenToNodePos(x: number): number {
+    return this.screenToViewport([x, 0.0])[0] / Composer.node_step;
+  }
+  syncNodeDrag() {
+    if (this.node_drag === null) {
+      throw Error("Node is not dragging now");
+    }
+    let node = this.nodes.get(this.node_drag.id)!;
+    node.position = this.node_drag.pos;
+    node.updatePosition();
+    if (this.solver !== null) {
+      this.solver.pullNode(node.id());
+    }
+  }
+  registerNodeMouse(node: PersonNode) {
+    let elem = node.html.find(".person-box")[0];
+    elem.onmousedown = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.node_drag = {
+        id: node.id(),
+        pos: this.screenToNodePos(e.clientX),
+      };
+      this.drag = true;
+      this.restartSolver();
     };
   }
 
@@ -85,7 +122,8 @@ export class Composer {
     let [cx, cy] = this.viewportToScreen([0.0, 0.0]);
     this.anchor.css("left", cx + "px");
     this.anchor.css("top", cy + "px");
-    this.anchor.css("scale", (1.0 / this.zoom).toString());
+    //this.anchor.css("scale", (1.0 / this.zoom).toString());
+    this.anchor.css("transform", "scale(" + (1.0 / this.zoom).toString() + ")");
   }
   updateScreen() {
     let rect = this.html[0].getBoundingClientRect();
@@ -95,7 +133,7 @@ export class Composer {
   }
 
   onZoom(delta: number, [sx, sy] : [number, number]) {
-    let zoom = this.zoom * Math.pow(2.0, 0.1 * delta);
+    let zoom = this.zoom * Math.pow(2.0, 0.25 * Math.sign(delta));
     let dz = this.zoom - zoom;
     this.position[0] += (sx - 0.5 * this.width) * dz;
     this.position[1] += (sy - 0.5 * this.height) * dz;
@@ -115,6 +153,7 @@ export class Composer {
       let node = new PersonNode(this, person, position, level);
       this.nodes.set(person.id, node);
       this.anchor.append(node.html);
+      this.registerNodeMouse(node);
       node.updatePosition();
       this.updateSolver();
       return node;
@@ -175,11 +214,20 @@ export class Composer {
     return this.hsizeToPx(hpos);
   }
 
-  updateSolver() {
-    this.dirty = true;
+  startSolver() {
     if (this.loop === null) {
       this.loop = setInterval(this.solveCallback.bind(this), 1000.0 * this.delay);
     }
+  }
+  updateSolver() {
+    this.dirty = true;
+    this.startSolver();
+  }
+  restartSolver() {
+    if (this.solver !== null) {
+      this.solver.reset();
+    }
+    this.startSolver();
   }
   stopSolver() {
     if (this.loop !== null) {
@@ -199,10 +247,14 @@ export class Composer {
       if (this.solver === null) {
         throw Error("Solver is null");
       }
+      if (this.node_drag !== null) {
+        this.syncNodeDrag();
+        this.solver.reset();
+      }
       if (!this.solver.step(this.delay)) {
         this.stopSolver();
       }
-      this.solver.updateRefs();
+      this.solver.pushRefs();
       this.updateViewport();
     } catch (e) {
       this.stopSolver();

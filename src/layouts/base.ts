@@ -2,7 +2,9 @@ import { PersonNode, HorizontalLink, VerticalLink } from "../display";
 
 export interface Solver {
   step(dt?: number): boolean,
-  updateRefs(): void,
+  pushRefs(): void,
+  pullNode(id: string): void,
+  reset(): void,
 }
 
 export interface Layout {

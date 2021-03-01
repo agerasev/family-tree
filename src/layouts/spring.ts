@@ -83,9 +83,12 @@ class NodeState {
     this.pos += clamp(this.vel, -maxVel, maxVel) * dt;
     this.vel = 0.0;
   }
-  updateRef() {
+  push() {
     this.ref.position = this.pos;
     this.ref.updatePosition();
+  }
+  pull() {
+    this.pos = this.ref.position;
   }
   interact(other: NodeState, elast: number) {
     let d = this.pos - other.pos;
@@ -122,7 +125,7 @@ class HLinkState {
   }
   act(elast: number) {
     let d = (this.nodes[0].pos - this.nodes[1].pos);
-    const f = elast * clamp(d, -1.0, 1.0);
+    const f = elast * d;
     this.nodes[0].applyForce(-f);
     this.nodes[1].applyForce(f);
   }
@@ -172,7 +175,7 @@ class HLinkState {
   center(): number {
     return 0.5 * (this.nodes[0].pos + this.nodes[1].pos);
   }
-  updateRef() {
+  push() {
     this.ref.updatePosition();
   }
 }
@@ -192,7 +195,7 @@ class VLinkState {
   }
   act(elast: number) {
     let d = (this.bottom.pos - this.top.center());
-    const f = elast * clamp(d, -1.0, 1.0);
+    const f = elast * d;
     this.top.applyForce(f);
     this.bottom.applyForce(-f);
   }
@@ -216,7 +219,7 @@ class VLinkState {
       right.bottom.applyForce(f);
     }
   }
-  updateRef() {
+  push() {
     this.ref.updatePosition();
   }
 }
@@ -304,16 +307,22 @@ export class SpringSolver implements Solver {
 
     return true;
   }
-  updateRefs() {
+  pushRefs() {
     for (let [_, node] of this.nodes) {
-      node.updateRef();
+      node.push();
     }
     for (let [_, hlink] of this.hlinks) {
-      hlink.updateRef();
+      hlink.push();
     }
     for (let [_, vlink] of this.vlinks) {
-      vlink.updateRef();
+      vlink.push();
     }
+  }
+  pullNode(id: string) {
+    this.nodes.get(id)!.pull();
+  }
+  reset() {
+    this.time = 0.0;
   }
 }
 
