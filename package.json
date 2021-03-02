@@ -4,7 +4,7 @@
   "description": "Family tree",
   "main": "src/main.ts",
   "scripts": {
-    "build": "mkdir -p src/gen && ts-interface-builder src/data/input.ts --outDir src/gen && sass3js -f ts style/defs.scss src/gen/style-defs.ts && sass style/main.scss output/style.css && tsc && browserify build/main.js -o output/bundle.js --debug",
+    "build": "mkdir -p build/src/gen && ts-interface-builder src/frontend/typescript/data/input.ts --outDir src/gen && sass3js -f ts style/defs.scss src/gen/style-defs.ts && sass style/main.scss output/style.css && tsc && browserify build/main.js -o output/bundle.js --debug",
     "serve": "http-server"
   },
   "repository": {
