@@ -1,9 +1,15 @@
 export interface InName {
-  family: string,
   given: string,
+  family?: string,
   patronymic?: string,
   maiden?: string,
 }
+
+export type InDate = {
+  day?: string,
+  month?: string,
+  year?: string,
+} | string;
 
 export interface InPerson {
   id: string,
@@ -14,7 +20,7 @@ export interface InPerson {
     mother?: string,
   },
   birth?: {
-    date?: string,
+    date?: InDate,
     place?: string[],
   },
   image?: string,

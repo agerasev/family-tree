@@ -6,19 +6,19 @@ import {idCheck, randomId} from "./id";
 const checkers = createCheckers(inputTI);
 
 export class Name {
-  family: string;
   given: string;
+  family: string | null;
   patronymic: string | null;
   maiden: string | null;
 
   constructor(
-    family: string,
     given: string,
+    family?: string,
     patronymic?: string,
     maiden?: string,
   ) {
-    this.family = family;
     this.given = given;
+    this.family = family || null;
     this.patronymic = patronymic || null;
     this.maiden = maiden || null;
   }
@@ -26,19 +26,19 @@ export class Name {
   static fromDict(obj: InName): Name {
     checkers.InName.strictCheck(obj);
     return new Name(
-      obj.family,
       obj.given,
+      obj.family,
       obj.patronymic,
       obj.maiden,
     );
   }
 
   static createUnknown(): Name {
-    return new Name("-", "-");
+    return new Name("???");
   }
 
   text(): string {
-    const family = `${this.family}${this.maiden ? " (" + this.maiden! + ")" : ""}`;
+    const family = `${this.family || ""}${this.maiden ? " (" + this.maiden! + ")" : ""}`;
     const other = `${this.given}${this.patronymic ? " " + this.patronymic! : ""}`;
     return family + " " + other;
   }
