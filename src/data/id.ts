@@ -1,5 +1,5 @@
 
-const idBytes = 16;
+const idBytes = 4;
 const idLength = 2 * idBytes;
 const idCharMap = "0123456789abcdef";
 

@@ -9,6 +9,6 @@ $(function () {
     let tree = new Tree(toml.parse(tree_toml));
     console.log(tree);
     let composer = new Composer($(document.body), new SpringLayout());
-    composer.createNode(tree.persons.get("17e71bf8371fc0696602148257e366ad")!, 0.0, 0);//.expandBottom();
+    composer.createNode(tree.persons.get("17e71bf8")!, 0.0, 0);//.expandBottom();
   });
 });
