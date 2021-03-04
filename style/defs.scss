@@ -7,6 +7,9 @@ $person-box-height: $person-image-size + 4 * $person-box-padding;
 $person-container-padding: 24px;
 $person-container-width: $person-box-width + 2 * $person-container-padding;
 $person-container-height: $person-box-height + 2 * $person-container-padding;
+$person-color: #FFFFFF;
+$person-color-male: $person-color; // #EEEEFF;
+$person-color-female: $person-color; // #FFEEEE;
 
 $node-button-distance: 4px;
 $node-button-size: $person-container-padding - $node-button-distance;

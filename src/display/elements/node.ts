@@ -1,5 +1,5 @@
 import $ = require("jquery");
-import { Person, mixIds } from "../../data";
+import { Person, mixIds, Gender } from "../../data";
 import { Composer, side_shift } from "../composer";
 import { Crawler } from "../crawler";
 import { HorizontalLink, VerticalLink } from "./links";
@@ -34,7 +34,7 @@ export class PersonNode implements Entity {
     const next_family = name.family.slice(1);
     this.html = $(`
       <div class='person-container' style='left: 0px; top: 0px;'>
-        <div class='person-box'>
+        <div class='person-box ${this.person.gender == Gender.Male ? "person-male" : "person-female"}'>
           <img class='person-image' src='${this.person.image}'/>
           <div class='person-text'>
             ${first_family ? "<div>" + first_family + "</div>" : ""}

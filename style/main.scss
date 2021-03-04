@@ -61,8 +61,15 @@ body {
   height: $person-box-height - 2 * $person-box-padding;
   padding: $person-box-padding;
   overflow: clip;
-  background-color: #FFFFFF;
-  box-shadow: 0 0 16px -8px #000000;
+  background-color: $person-color;
+  box-shadow: 0 0 16px -4px #000000;
+}
+
+.person-male {
+  background-color: $person-color-male;
+}
+.person-female {
+  background-color: $person-color-female;
 }
 
 .person-image {
@@ -77,6 +84,7 @@ body {
   margin: $person-box-padding;
   overflow: clip;
   font-size: $person-text-font-size;
+  white-space: nowrap;
 }
 
 .person-container:hover .node-button {
