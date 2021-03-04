@@ -8,10 +8,17 @@
     url('/fonts/noto-sans-v11-regular.woff') format('woff');
 }
 
+@font-face {
+  font-family: "RobotoCondensedEmbedded";
+  src:
+    url('/fonts/roboto-condensed-v19-regular.woff2') format('woff2'),
+    url('/fonts/roboto-condensed-v19-regular.woff') format('woff');
+}
+
 body {
   padding: 0;
   margin: 0;
-  font-family: "NotoSansEmbedded", "Noto Sans", sans-serif;
+  font-family: "RobotoCondensedEmbedded", "Roboto Condensed", sans-serif;
 }
 
 .composer-container {
@@ -47,7 +54,7 @@ body {
 
 .person-box {
   position: absolute;
-  display: inline-block;
+  display: flex;
   left: $person-container-padding;
   top: $person-container-padding;
   width: $person-box-width - 2 * $person-box-padding;
@@ -55,12 +62,21 @@ body {
   padding: $person-box-padding;
   overflow: clip;
   background-color: #FFFFFF;
+  box-shadow: 0 0 16px -8px #000000;
 }
 
 .person-image {
-  width: 96px;
-  height: 96px;
-  float: left;
+  width: $person-image-size;
+  height: $person-image-size;
+  margin: $person-box-padding;
+}
+
+.person-text {
+  display: inline-block;
+  width: $person-text-width;
+  margin: $person-box-padding;
+  overflow: clip;
+  font-size: 20px;
 }
 
 .person-container:hover .node-button {

@@ -14,8 +14,12 @@
   border-radius: $node-button-size;
   cursor: pointer;
   visibility: hidden;
+  box-shadow: 0 0 8px -2px #000000;
 }
-
+.node-button-sign {
+  width: 100%;
+  height: 100%;
+}
 .node-button-hidden {
   display: none;
 }

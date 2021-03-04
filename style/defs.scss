@@ -1,20 +1,23 @@
-$person-box-width: 240px;
-$person-box-height: 120px;
-$person-box-padding: 4px;
+$person-image-size: 96px;
+$person-text-width: 128px;
+$person-text-font-size: 20px;
+$person-box-padding: 2px;
+$person-box-width: $person-image-size + $person-text-width + 6 * $person-box-padding;
+$person-box-height: $person-image-size + 4 * $person-box-padding;
 $person-container-padding: 24px;
 $person-container-width: $person-box-width + 2 * $person-container-padding;
 $person-container-height: $person-box-height + 2 * $person-container-padding;
-$person-image-size: 64px;
 
-$node-button-size: 16px;
 $node-button-distance: 4px;
+$node-button-size: $person-container-padding - $node-button-distance;
 
 $person-vertical-distance: 48px;
 $person-horizontal-distance: 32px;
 $person-vertical-step: $person-container-height + $person-vertical-distance;
 $person-horizontal-step: $person-container-width + $person-horizontal-distance;
 
-$stroke-width: 2px;
-$link-margin: 4px;
-$horizontal-link-height: 24px + $person-container-padding;
+$link-stroke-width: 16px;
+$link-margin: 2 + $link-stroke-width;
+$link-color: #FFFFFF;
+$horizontal-link-height: $person-container-padding + $node-button-size + $node-button-distance;
 $vertical-link-height: $person-vertical-distance + 2 * $person-container-padding - $horizontal-link-height;

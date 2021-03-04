@@ -36,12 +36,6 @@ export class Name {
   static createUnknown(): Name {
     return new Name("???");
   }
-
-  text(): string {
-    const family = `${this.family || ""}${this.maiden ? " (" + this.maiden! + ")" : ""}`;
-    const other = `${this.given}${this.patronymic ? " " + this.patronymic! : ""}`;
-    return family + " " + other;
-  }
 }
 
 export enum Gender {

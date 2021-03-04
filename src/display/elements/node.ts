@@ -29,27 +29,34 @@ export class PersonNode implements Entity {
     this.position = position;
     this.level = level;
 
+    const name = this.person.name;
     this.html = $(`
       <div class='person-container' style='left: 0px; top: 0px;'>
         <div class='person-box'>
           <img class='person-image' src='${this.person.image}'/>
-          <div>${this.person.name.text()}</div>
+          <div class='person-text'>
+            ${name.family ? "<div>" + name.family + "</div>" : ""}
+            ${name.maiden ? "<div>(" + name.maiden + ")</div>" : ""}
+            <div>${name.given}</div>
+            ${name.patronymic ? "<div>" + name.patronymic + "</div>" : ""}
+          </div>
         </div>
       </div>
     `)
+    const [plus, minus] = ["/images/plus.svg", "/images/minus.svg"];
     let buttons_info: [() => boolean, () => void, string, string][] = [
-      [this.canExpandTop, this.expandTop, "person-expand-top", "+"],
-      [this.canCollapseTop, this.collapseTop, "person-collapse-top", "−"],
-      [this.canExpandBottom, this.expandBottom, "person-expand-bottom", "+"],
-      [this.canCollapseBottom, this.collapseBottom, "person-collapse-bottom", "−"],
-      [this.canExpandSide, () => this.expandSide(-1), "person-expand-left", "+"],
-      [this.canCollapseSide, () => this.collapseSide(-1), "person-collapse-left", "−"],
-      [this.canExpandSide, () => this.expandSide(1), "person-expand-right", "+"],
-      [this.canCollapseSide, () => this.collapseSide(1), "person-collapse-right", "−"],
+      [this.canExpandTop, this.expandTop, "person-expand-top", plus],
+      [this.canCollapseTop, this.collapseTop, "person-collapse-top", minus],
+      [this.canExpandBottom, this.expandBottom, "person-expand-bottom", plus],
+      [this.canCollapseBottom, this.collapseBottom, "person-collapse-bottom", minus],
+      [this.canExpandSide, () => this.expandSide(-1), "person-expand-left", plus],
+      [this.canCollapseSide, () => this.collapseSide(-1), "person-collapse-left", minus],
+      [this.canExpandSide, () => this.expandSide(1), "person-expand-right", plus],
+      [this.canCollapseSide, () => this.collapseSide(1), "person-collapse-right", minus],
     ];
     this.buttons = [];
-    for (let [check, run, css_class, text] of buttons_info) {
-      let button = new NodeButton(check.bind(this), run.bind(this), css_class, text);
+    for (let [check, run, css_class, icon] of buttons_info) {
+      let button = new NodeButton(check.bind(this), run.bind(this), css_class, icon);
       this.html.append(button.html);
       this.buttons.push(button);
     }

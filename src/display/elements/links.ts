@@ -7,7 +7,8 @@ import style from "../../gen/style-defs";
 import { Crawler } from "../crawler";
 
 const link_margin = parseFloat(style.linkMargin);
-const stroke_width = parseFloat(style.strokeWidth);
+const stroke_width = parseFloat(style.linkStrokeWidth);
+const link_color = style.linkColor;
 
 export class HorizontalLink implements Entity {
   composer: Composer;
@@ -26,14 +27,14 @@ export class HorizontalLink implements Entity {
     this.html = $(`
     <div class='horizontal-link'>
       <svg xmlns='http://www.w3.org/2000/svg'>
-        <path d='' fill='transparent' stroke='black' stroke-width='${stroke_width}'/>
+        <path d='' fill='transparent' stroke='${link_color}' stroke-width='${stroke_width}'/>
       </svg>
     </div>
     `);
     this.svg = this.html.find("svg");
     let buttons_info: [() => boolean, () => void, string, string][] = [
-      [this.canExpandBottom, this.expandBottom, "horizontal-link-expand-bottom", "+"],
-      [this.canCollapseBottom, this.collapseBottom, "horizontal-link-collapse-bottom", "−"],
+      [this.canExpandBottom, this.expandBottom, "horizontal-link-expand-bottom", "/images/plus.svg"],
+      [this.canCollapseBottom, this.collapseBottom, "horizontal-link-collapse-bottom", "/images/minus.svg"],
     ];
     this.buttons = [];
     for (let [check, run, css_class, text] of buttons_info) {
@@ -183,7 +184,7 @@ export class VerticalLink implements Entity {
     this.html = $(`
     <div class='vertical-link'>
       <svg xmlns='http://www.w3.org/2000/svg'>
-        <path d='' fill='transparent' stroke='black' stroke-width='${stroke_width}'/>
+        <path d='' fill='transparent' stroke='${link_color}' stroke-width='${stroke_width}'/>
       </svg>
     </div>
     `);
