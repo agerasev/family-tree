@@ -1,4 +1,4 @@
-import {InName, InPerson, InTree} from "./input";
+import {InDate, InEvent, InEventType, InGender, InName, InPerson, InTree} from "./input";
 import inputTI from "../gen/input-ti";
 import {createCheckers, func} from "ts-interface-checker";
 import {idCheck, randomId} from "./id";
@@ -7,29 +7,31 @@ const checkers = createCheckers(inputTI);
 
 export class Name {
   given: string;
-  family: string | null;
+  family: string[];
   patronymic: string | null;
-  maiden: string | null;
 
   constructor(
     given: string,
-    family?: string,
+    family?: string[],
     patronymic?: string,
-    maiden?: string,
   ) {
     this.given = given;
-    this.family = family || null;
+    this.family = family || [];
     this.patronymic = patronymic || null;
-    this.maiden = maiden || null;
   }
 
   static fromDict(obj: InName): Name {
     checkers.InName.strictCheck(obj);
+    let family = null;
+    if (typeof obj.family === "string") {
+      family = [obj.family];
+    } else {
+      family = obj.family;
+    }
     return new Name(
       obj.given,
-      obj.family,
+      family,
       obj.patronymic,
-      obj.maiden,
     );
   }
 
@@ -42,7 +44,7 @@ export enum Gender {
   Male,
   Female,
 }
-export function genderFromText(str: "male" | "female"): Gender {
+export function genderFromText(str: InGender): Gender {
   switch (str) {
     case "male": {
       return Gender.Male;
@@ -61,6 +63,63 @@ export function genderInverse(gender: Gender): Gender {
   }
 }
 
+export enum EventType {
+  Birth,
+  Death,
+}
+export function eventTypeFromText(str: InEventType): EventType {
+  switch (str) {
+    case "birth": {
+      return EventType.Birth;
+    }
+    case "death": {
+      return EventType.Death;
+    }
+  }
+}
+
+export function readDate(date: InDate): Date {
+  if (typeof date === "string") {
+    return new Date(date);
+  } else {
+    let res = new Date();
+    if (date.year !== undefined) {
+      res.setFullYear(date.year);
+    }
+    if (date.month !== undefined) {
+      res.setMonth(date.month);
+    }
+    if (date.day !== undefined) {
+      res.setDate(date.day);
+    }
+    return res;
+  }
+}
+
+export class Event {
+  type: EventType;
+  date: Date | null;
+  place: string[] | null;
+
+  constructor(
+    type: EventType,
+    date?: Date,
+    place?: string[],
+  ) {
+    this.type = type;
+    this.date = date || null;
+    this.place = place || null;
+  }
+  static readDict(obj: InEvent): Event {
+    checkers.InEvent.strictCheck(obj);
+    return new Event(
+      eventTypeFromText(obj.type),
+      obj.date ? readDate(obj.date) : undefined,
+      obj.place,
+    );
+  }
+};
+
 export class Person {
   id: string;
   name: Name;
@@ -71,12 +130,14 @@ export class Person {
   } | null;
   children: Person[];
   has_children_with: Map<string, Person>;
+  events: Event[];
   image: string;
 
   constructor(
     id: string,
     name: Name,
     gender: Gender,
+    events?: Event[],
     image?: string,
   ) {
     this.id = id;
@@ -85,6 +146,7 @@ export class Person {
     this.parents = null;
     this.children = [];
     this.has_children_with = new Map<string, Person>();
+    this.events = events || [];
     if (image !== undefined) {
       this.image = "/data/" + image;
     } else {
@@ -107,6 +169,7 @@ export class Person {
       obj.id,
       Name.fromDict(obj.name),
       genderFromText(obj.gender),
+      obj.events ? obj.events.map(evt => Event.readDict(evt)) : undefined,
       obj.image,
     );
   }

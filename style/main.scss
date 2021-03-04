@@ -76,7 +76,7 @@ body {
   width: $person-text-width;
   margin: $person-box-padding;
   overflow: clip;
-  font-size: 20px;
+  font-size: $person-text-font-size;
 }
 
 .person-container:hover .node-button {

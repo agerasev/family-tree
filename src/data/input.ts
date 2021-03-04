@@ -1,28 +1,36 @@
 export interface InName {
   given: string,
-  family?: string,
+  family?: string | string[],
   patronymic?: string,
-  maiden?: string,
 }
 
 export type InDate = {
-  day?: string,
-  month?: string,
-  year?: string,
+  day?: number,
+  month?: number,
+  year?: number,
 } | string;
+
+export type InEventType =
+  "birth" |
+  "death";
+
+export interface InEvent {
+  type: InEventType,
+  date?: InDate,
+  place?: string[],
+}
+
+export type InGender = "male" | "female";
 
 export interface InPerson {
   id: string,
   name: InName,
-  gender: "male" | "female",
+  gender: InGender,
   parents?: {
     father?: string,
     mother?: string,
   },
-  birth?: {
-    date?: InDate,
-    place?: string[],
-  },
+  events?: InEvent[],
   image?: string,
 }
 
