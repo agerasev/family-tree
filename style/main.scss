@@ -2,17 +2,19 @@
 @import "./buttons.scss";
 
 @font-face {
-  font-family: "NotoSansEmbedded";
+  font-family: "RobotoCondensedEmbedded";
   src:
-    url('/fonts/noto-sans-v11-regular.woff2') format('woff2'),
-    url('/fonts/noto-sans-v11-regular.woff') format('woff');
+    url('/fonts/roboto-condensed-v19-regular.woff2') format('woff2'),
+    url('/fonts/roboto-condensed-v19-regular.woff') format('woff');
+  font-weight: 400;
 }
 
 @font-face {
   font-family: "RobotoCondensedEmbedded";
   src:
-    url('/fonts/roboto-condensed-v19-regular.woff2') format('woff2'),
-    url('/fonts/roboto-condensed-v19-regular.woff') format('woff');
+    url('/fonts/roboto-condensed-v19-700.woff2') format('woff2'),
+    url('/fonts/roboto-condensed-v19-700.woff') format('woff');
+  font-weight: 700;
 }
 
 body {
@@ -49,42 +51,40 @@ body {
   z-index: 3;
   width: $person-container-width;
   height: $person-container-height;
-  //background-color: rgba(0,0,0,0.1);
 }
 
 .person-box {
   position: absolute;
   display: flex;
+  flex-direction: column;
   left: $person-container-padding;
   top: $person-container-padding;
   width: $person-box-width - 2 * $person-box-padding;
   height: $person-box-height - 2 * $person-box-padding;
   padding: $person-box-padding;
-  overflow: clip;
-  background-color: $person-color;
-  box-shadow: 0 0 16px -4px #000000;
-}
-
-.person-male {
-  background-color: $person-color-male;
-}
-.person-female {
-  background-color: $person-color-female;
+  overflow: visible;
+  text-align: center;
 }
 
 .person-image {
   width: $person-image-size;
   height: $person-image-size;
-  margin: $person-box-padding;
+  align-self: center;
+  border-radius: 50%;
+  box-shadow: 0 0 16px -4px black;
 }
 
 .person-text {
-  display: inline-block;
-  width: $person-text-width;
-  margin: $person-box-padding;
-  overflow: clip;
+  height: $person-text-height;
+  overflow: visible;
+  align-self: center;
+  text-align: center;
   font-size: $person-text-font-size;
   white-space: nowrap;
+  color: #FFFFFF;
+  font-weight: 700;
+  line-height: 100% * $person-text-line-height;
+  text-shadow: 0 0 4px black;
 }
 
 .person-container:hover .node-button {
@@ -95,7 +95,7 @@ body {
   position: absolute;
   display: inline-block;
   z-index: 2;
-  height: $horizontal-link-height + $link-margin;
+  height: 0.5 * $person-box-height + $horizontal-link-height + $link-margin;
   margin: 0;
   padding: 0;
   //background-color: rgba(0,0,0,0.2);
@@ -105,7 +105,7 @@ body {
   position: absolute;
   display: inline-block;
   z-index: 1;
-  height: $vertical-link-height;
+  height: $vertical-link-height + 0.5 * $person-box-height;
   margin: 0;
   padding: 0;
   //background-color: rgba(0,0,0,0.2);

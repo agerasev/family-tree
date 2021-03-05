@@ -58,8 +58,8 @@
 }
 
 .horizontal-link-expand-bottom {
-  top: $horizontal-link-height - ($node-button-size + $node-button-distance);
+  top: 0.5 * $person-box-height + $horizontal-link-height - ($node-button-size + $node-button-distance);
 }
 .horizontal-link-collapse-bottom {
-  top: $horizontal-link-height - ($node-button-size + $node-button-distance);
+  top: 0.5 * $person-box-height + $horizontal-link-height - ($node-button-size + $node-button-distance);
 }

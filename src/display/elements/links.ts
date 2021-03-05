@@ -58,19 +58,22 @@ export class HorizontalLink implements Entity {
     this.html.css("left", (this.composer.hposToPx(left) - px_margin) + "px");
     this.html.css("width", (px_width + 2 * px_margin) + "px");
     let level = Math.max(this.nodes[0].level, this.nodes[1].level)
-    this.html.css("top", (this.composer.vposToPx(level) + 0.5 * PersonNode.box_height) + "px");
+    this.html.css("top", this.composer.vposToPx(level) + "px");
 
+    const px_tail = 0.5 * PersonNode.box_height;
     const px_height = HorizontalLink.height;
     this.svg.width(px_width + 2 * px_margin);
-    this.svg.height(px_height + px_margin);
+    this.svg.height(px_tail + px_height + px_margin);
     this.svg.find("path").attr("d", `
       M ${px_margin + 0} ${0}
-      C ${px_margin + 0} ${px_height},
-        ${px_margin + 0.5 * px_width} ${0},
-        ${px_margin + 0.5 * px_width} ${px_height}
-      C ${px_margin + 0.5 * px_width} ${0},
-        ${px_margin + px_width} ${px_height},
-        ${px_margin + px_width} ${0}
+      L ${px_margin + 0} ${px_tail}
+      C ${px_margin + 0} ${px_tail + px_height},
+        ${px_margin + 0.5 * px_width} ${px_tail},
+        ${px_margin + 0.5 * px_width} ${px_tail + px_height}
+      C ${px_margin + 0.5 * px_width} ${px_tail},
+        ${px_margin + px_width} ${px_tail + px_height},
+        ${px_margin + px_width} ${px_tail}
+      L ${px_margin + px_width} ${0}
     `);
 
     this.buttons[0].html.css(
@@ -203,9 +206,10 @@ export class VerticalLink implements Entity {
     this.html.css("top", (this.composer.vposToPx(level) + 0.5 * PersonNode.box_height + HorizontalLink.height) + "px");
 
     const px_margin = link_margin;
+    const px_tail = 0.5 * PersonNode.box_height;
     const px_height = VerticalLink.height;
     this.svg.width(px_width + 2 * link_margin);
-    this.svg.height(px_height);
+    this.svg.height(px_height + px_tail);
     const begin = this.composer.hsizeToPx(top_center - left);
     const end = this.composer.hsizeToPx(bottom_center - left);
     this.svg.find("path").attr("d", `
@@ -213,6 +217,7 @@ export class VerticalLink implements Entity {
       C ${px_margin + begin} ${px_height},
         ${px_margin + end} ${0},
         ${px_margin + end} ${px_height}
+      L ${px_margin + end} ${px_height + px_tail}
     `);
   }
 

@@ -31,14 +31,12 @@ export class PersonNode implements Entity {
 
     const name = this.person.name;
     const first_family = name.family.length > 0 ? name.family[0] : null;
-    const next_family = name.family.slice(1);
     this.html = $(`
       <div class='person-container' style='left: 0px; top: 0px;'>
         <div class='person-box ${this.person.gender == Gender.Male ? "person-male" : "person-female"}'>
           <img class='person-image' src='${this.person.image}'/>
           <div class='person-text'>
             ${first_family ? "<div>" + first_family + "</div>" : ""}
-            ${next_family.length > 0 ? "<div>(" + next_family.join(", ") + ")</div>" : ""}
             <div>${name.given}</div>
             ${name.patronymic ? "<div>" + name.patronymic + "</div>" : ""}
           </div>
