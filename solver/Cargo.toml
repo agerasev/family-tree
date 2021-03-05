@@ -1,0 +1,12 @@
+[package]
+name = "family_tree_graph_layout_solver"
+description = "Family tree graph layout solver"
+version = "0.1.0"
+authors = ["Alexey Gerasev <alexey.gerasev@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2.71"
