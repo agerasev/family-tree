@@ -1,4 +1,6 @@
 const path = require("path");
+const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   entry: "./src/main.ts",
@@ -29,4 +31,13 @@ module.exports = {
     filename: "bundle.js",
   },
   mode: "development",
+  plugins: [
+    new HtmlWebpackPlugin(),
+    new WasmPackPlugin({
+      crateDirectory: path.resolve(__dirname, "./solver")
+    }),
+  ],
+  experiments: {
+    asyncWebAssembly: true,
+  },
 };
