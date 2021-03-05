@@ -16,7 +16,7 @@ export class Composer {
   layout: Layout;
   solver: Solver | null = null;
   dirty: boolean = false;
-  loop: number | null = null;
+  loop: ReturnType<typeof setTimeout> | null = null;
   delay: number = 0.04;
 
   width: number;
