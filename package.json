@@ -5,7 +5,7 @@
   "main": "src/main.ts",
   "scripts": {
     "build": "mkdir -p src/gen && ts-interface-builder src/data/input.ts --outDir src/gen && sass3js -f ts style/defs.scss src/gen/style-defs.ts && sass style/main.scss output/style.css && webpack",
-    "serve": "http-server"
+    "serve": "webpack serve"
   },
   "repository": {
     "type": "git",
@@ -17,20 +17,20 @@
   "dependencies": {
     "@types/jquery": "^3.5.5",
     "css-loader": "^5.1.1",
-    "jquery": "^3.5.1",
+    "jquery": "^3.6.0",
     "sass": "^1.32.8",
     "sass-loader": "^11.0.1",
     "sass3js": "^1.0.8",
     "style-loader": "^2.0.0",
     "toml": "^3.0.0",
     "ts-interface-builder": "^0.3.0",
-    "ts-interface-checker": "^0.2.0",
+    "ts-interface-checker": "^0.2.1",
     "ts-loader": "^8.0.17",
-    "typescript": "^4.1.5",
+    "typescript": "^4.2.3",
     "webpack": "^5.24.3",
     "webpack-cli": "^4.5.0"
   },
   "devDependencies": {
-    "http-server": "^0.12.3"
+    "webpack-dev-server": "^3.11.2"
   }
 }
