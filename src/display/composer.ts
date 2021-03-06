@@ -19,7 +19,7 @@ export class Composer {
   loop: ReturnType<typeof window.requestAnimationFrame> | null = null;
   prev_step: number = 0.0;
   static min_step = 40.0;
-  static max_step = 100.0;
+  static max_step = 80.0;
 
   width: number;
   height: number;
