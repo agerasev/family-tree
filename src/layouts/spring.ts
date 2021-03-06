@@ -274,13 +274,7 @@ export class SpringSolver implements Solver {
       pushToMapOfArrays(this.vlink_levels, vlink.ref.bottom.level, vlink);
     }
   }
-  step(dt?: number): boolean {
-    if (dt === undefined) {
-      throw Error("Time step must be defined");
-    }
-    if (this.time >= this.scenario.time) {
-      return false;
-    }
+  compute(): void {
     const elast = this.scenario.elastByTime(this.time);
 
     for (let [_, nodes] of this.node_levels) {
@@ -297,6 +291,15 @@ export class SpringSolver implements Solver {
     }
     for (let [_, vlinks] of this.vlink_levels) {
       forEachPair(vlinks, (a, b) => a.intersect(b, elast.ver_inter));
+    }
+  }
+  
+  step(dt?: number): boolean {
+    if (dt === undefined) {
+      throw Error("Time step must be defined");
+    }
+    if (this.time >= this.scenario.time) {
+      return false;
     }
 
     for (let [_, node] of this.nodes) {

@@ -22,7 +22,7 @@ pub struct Elast {
     pub ver_inter: f64,
 }
 
-pub const MAX_VEL: f64 = 1.0;
+pub const MAX_STEP: f64 = 0.1;
 
 pub const ELAST: Elast = Elast {
     node: 1.0,
@@ -47,7 +47,9 @@ impl Node {
         self.vel.set(self.vel.get() + f);
     }
     fn step(&self, dt: f64) {
-        self.pos.set(self.pos.get() + self.vel.get().clamp(-MAX_VEL, MAX_VEL) * dt);
+        self.pos.set(self.pos.get() + (self.vel.get() * dt).clamp(-MAX_STEP, MAX_STEP));
+    }
+    fn clear(&self) {
         self.vel.set(0.0);
     }
     fn interact(&self, other: &Node, elast: f64) {
@@ -236,7 +238,11 @@ impl Solver {
         self.nodes[&id].pos.set(pos);
     }
 
-    pub fn step(&self, dt: f64) {
+    pub fn compute(&self) {
+        for node in self.nodes.values() {
+            node.clear();
+        }
+
         for nodes in self.node_levels.values() {
             for_each_pair(nodes, |a, b| a.interact(b, ELAST.node));
         }
@@ -252,7 +258,9 @@ impl Solver {
         for vlinks in self.vlink_levels.values() {
             for_each_pair(vlinks, |a, b| a.intersect(b, ELAST.ver_inter));
         }
+    }
 
+    pub fn step(&self, dt: f64) {
         for node in self.nodes.values() {
             node.step(dt);
         }

@@ -1,6 +1,7 @@
 import { PersonNode, HorizontalLink, VerticalLink } from "../display";
 
 export interface Solver {
+  compute(): void,
   step(dt?: number): boolean,
   pushRefs(): void,
   pullNode(id: string): void,

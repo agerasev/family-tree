@@ -32,6 +32,9 @@ export class WasmSolver implements Solver {
       this.native.add_vlink(id, vlink.top.id(), vlink.bottom.id());
     }
   }
+  compute() {
+    this.native.compute();
+  }
   step(dt?: number): boolean {
     if (dt === undefined) {
       throw Error("Time step must be defined");
@@ -47,6 +50,7 @@ export class WasmSolver implements Solver {
   }
   pushRefs() {
     this.native.sync();
+
     for (let [_, node] of this.nodes) {
       node.updatePosition();
     }
@@ -54,7 +58,7 @@ export class WasmSolver implements Solver {
       hlink.updatePosition();
     }
     for (let [_, vlink] of this.vlinks) {
-      vlink.updatePosition();;
+      vlink.updatePosition();
     }
   }
   pullNode(id: string) {
@@ -72,7 +76,7 @@ export class WasmLayout implements Layout {
     vlinks: Map<string, VerticalLink>,
   ): WasmSolver {
     return new WasmSolver(
-      1.0,
+      8.0,
       nodes,
       hlinks,
       vlinks,

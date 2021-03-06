@@ -16,8 +16,10 @@ export class Composer {
   layout: Layout;
   solver: Solver | null = null;
   dirty: boolean = false;
-  loop: ReturnType<typeof setTimeout> | null = null;
-  delay: number = 0.04;
+  loop: ReturnType<typeof window.requestAnimationFrame> | null = null;
+  prev_step: number = 0.0;
+  static min_step = 40.0;
+  static max_step = 100.0;
 
   width: number;
   height: number;
@@ -214,31 +216,40 @@ export class Composer {
     return this.hsizeToPx(hpos);
   }
 
-  startSolver() {
+  startAnimation() {
     if (this.loop === null) {
-      this.loop = setInterval(this.solveCallback.bind(this), 1000.0 * this.delay);
+      this.continueAnimation();
     }
+  }
+  continueAnimation() {
+    this.loop = window.requestAnimationFrame(this.solveCallback.bind(this));
   }
   updateSolver() {
     this.dirty = true;
-    this.startSolver();
+    this.startAnimation();
   }
   restartSolver() {
     if (this.solver !== null) {
       this.solver.reset();
     }
-    this.startSolver();
+    this.startAnimation();
   }
-  stopSolver() {
+  stopAnimation() {
     if (this.loop !== null) {
-      clearInterval(this.loop);
+      window.cancelAnimationFrame(this.loop);
       this.loop = null;
     }
   }
-  solveCallback() {
+  solveCallback(time: number) {
     if (this.loop === null) {
       return;
     }
+    let dt = time - this.prev_step;
+    if (dt < Composer.min_step) {
+      this.continueAnimation();
+      return;
+    }
+
     try {
       if (this.dirty) {
         this.solver = this.layout.createSolver(this.nodes, this.hlinks, this.vlinks);
@@ -251,13 +262,20 @@ export class Composer {
         this.syncNodeDrag();
         this.solver.reset();
       }
-      if (!this.solver.step(this.delay)) {
-        this.stopSolver();
+
+      this.solver.compute();
+      let cont = this.solver.step(1e-3 * Math.min(dt, Composer.max_step));
+      if (cont) {
+        this.continueAnimation();
+      } else {
+        this.stopAnimation();
       }
+      this.prev_step = time;
+
       this.solver.pushRefs();
       this.updateViewport();
     } catch (e) {
-      this.stopSolver();
+      this.stopAnimation();
       throw e;
     }
   }
