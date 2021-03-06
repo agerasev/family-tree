@@ -38,12 +38,12 @@ new Promise((resolve, _) => resolve())
 .then(_ => npx(["sass3js", "-f", "ts", "style/defs.scss", "src/gen/style-defs.ts"]))
 .then(_ => npx(["sass", "style/main.scss", "output/style.css"]))
 
-.then(_ => run(["wasm-pack", "build", "solver", "--target", "web", "--out-dir", "../src/solver", "--out-name", "index"]))
+.then(_ => run(["wasm-pack", "build", "solver", "--target", "web", "--dev", "--out-dir", "../src/solver", "--out-name", "index"]))
 .then(_ => fsp.copyFile("src/solver/index_bg.wasm", "output/solver.wasm"))
 
 .then(_ => npx(["tsc"]))
 
-.then(_ => npx(["esbuild", "build/main.js", "--bundle", "--outfile=output/bundle.js"]))
+.then(_ => npx(["esbuild", "build/main.js", "--bundle", "--outfile=output/bundle.js", "--sourcemap=inline"]))
 
 .catch(err => {
   console.log(err);

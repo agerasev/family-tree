@@ -1,6 +1,5 @@
 import { Layout, Solver } from "./base";
 import { PersonNode, HorizontalLink, VerticalLink } from "../display";
-import { func } from "ts-interface-checker";
 
 const maxVel = 1.0;
 
