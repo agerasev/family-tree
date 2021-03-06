@@ -26,7 +26,7 @@ export class PersonNode implements Entity {
     this.person = person;
     this.top = null;
     this.side = new Map<string, HorizontalLink>();
-    this.position = position;
+    this.position = position + 0.001 * Math.random();
     this.level = level;
 
     const name = this.person.name;
