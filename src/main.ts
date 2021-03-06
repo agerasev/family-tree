@@ -7,7 +7,7 @@ import init, { greet } from "./solver";
 
 $(function () {
   init("output/solver.wasm").then(_ => {
-    greet("World");
+    greet("WASM");
     $.get('data/graph.toml', function (tree_toml) {
       let tree = new Tree(toml.parse(tree_toml));
       console.log(tree);

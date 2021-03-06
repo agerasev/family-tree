@@ -33,8 +33,8 @@ export class HorizontalLink implements Entity {
     `);
     this.svg = this.html.find("svg");
     let buttons_info: [() => boolean, () => void, string, string][] = [
-      [this.canExpandBottom, this.expandBottom, "horizontal-link-expand-bottom", "/images/plus.svg"],
-      [this.canCollapseBottom, this.collapseBottom, "horizontal-link-collapse-bottom", "/images/minus.svg"],
+      [this.canExpandBottom, this.expandBottom, "horizontal-link-expand-bottom", "images/plus.svg"],
+      [this.canCollapseBottom, this.collapseBottom, "horizontal-link-collapse-bottom", "images/minus.svg"],
     ];
     this.buttons = [];
     for (let [check, run, css_class, text] of buttons_info) {

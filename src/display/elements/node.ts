@@ -43,7 +43,7 @@ export class PersonNode implements Entity {
         </div>
       </div>
     `)
-    const [plus, minus] = ["/images/plus.svg", "/images/minus.svg"];
+    const [plus, minus] = ["images/plus.svg", "images/minus.svg"];
     let buttons_info: [() => boolean, () => void, string, string][] = [
       [this.canExpandTop, this.expandTop, "person-expand-top", plus],
       [this.canCollapseTop, this.collapseTop, "person-collapse-top", minus],

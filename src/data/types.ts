@@ -148,15 +148,15 @@ export class Person {
     this.has_children_with = new Map<string, Person>();
     this.events = events || [];
     if (image !== undefined) {
-      this.image = "/data/" + image;
+      this.image = "data/" + image;
     } else {
       switch (gender) {
         case Gender.Male: {
-          this.image = "/images/unknown-male.jpg";
+          this.image = "images/unknown-male.jpg";
           break;
         }
         case Gender.Female: {
-          this.image = "/images/unknown-female.jpg";
+          this.image = "images/unknown-female.jpg";
           break;
         }
       }

@@ -5,7 +5,7 @@
   "main": "src/main.ts",
   "scripts": {
     "build": "node build.js",
-    "serve": "light-server --serve ."
+    "serve": "light-server --serve . --no-reload"
   },
   "repository": {
     "type": "git",
