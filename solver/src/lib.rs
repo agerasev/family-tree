@@ -33,7 +33,6 @@ pub const ELAST: Elast = Elast {
 };
 
 struct Node {
-    id: JsId,
     pos: Cell<f64>,
     vel: Cell<f64>,
     level: i32,
@@ -41,6 +40,9 @@ struct Node {
 }
 
 impl Node {
+    fn new(pos: f64, level: i32, callback: JsFunction) -> Self {
+        Self { pos: Cell::new(pos), vel: Cell::new(0.0), level, callback }
+    }
     fn apply_force(&self, f: f64) {
         self.vel.set(self.vel.get() + f);
     }
@@ -59,22 +61,102 @@ impl Node {
             other.apply_force(-f);
         }
     }
-
     pub fn sync(&self) {
         (self.callback).call1(&JsValue::null(), &JsValue::from(self.pos.get())).unwrap();
     }
 }
 
 struct HLink {
-    id: JsId,
-    left: Rc<Node>,
-    right: Rc<Node>,
+    nodes: (Rc<Node>, Rc<Node>),
+}
+
+impl HLink {
+    pub fn new(nodes: (Rc<Node>, Rc<Node>)) -> Self {
+        Self { nodes }
+    }
+    pub fn apply_force(&self, f: f64) {
+        self.nodes.0.apply_force(f / 2.0);
+        self.nodes.1.apply_force(f / 2.0);
+    }
+    pub fn act(&self, elast: f64) {
+        let d = self.nodes.0.pos.get() - self.nodes.1.pos.get();
+        let f = elast * d;
+        self.nodes.0.apply_force(-f);
+        self.nodes.1.apply_force(f);
+    }
+    pub fn intersect(&self, other: &HLink, elast: f64) {
+        if self.has_common_node(other) {
+            return;
+        }
+        let (tc, oc) = (self.center(), other.center());
+        let (ts, os) = (self.size(), other.size());
+        let mut d = tc - oc;
+        let l = d.abs();
+        let r = 0.5 * (ts + os) + 1.0;
+        if l < r {
+            d /= l;
+            let f = elast * d * (r - l);
+            let (this_node, other_node) = if d > 0.0 {
+                (self.nodes_sorted().0, other.nodes_sorted().1)
+            } else {
+                (self.nodes_sorted().1, other.nodes_sorted().0)
+            };
+            this_node.apply_force(f);
+            other_node.apply_force(-f);
+        }
+    }
+    pub fn has_common_node(&self, other: &HLink) -> bool {
+        Rc::ptr_eq(&self.nodes.0, &other.nodes.0) ||
+        Rc::ptr_eq(&self.nodes.0, &other.nodes.1) ||
+        Rc::ptr_eq(&self.nodes.1, &other.nodes.0) ||
+        Rc::ptr_eq(&self.nodes.1, &other.nodes.1)
+    }
+    pub fn nodes_sorted(&self) -> (Rc<Node>, Rc<Node>) {
+        if self.nodes.0.pos.get() <= self.nodes.1.pos.get() {
+            (self.nodes.0.clone(), self.nodes.1.clone())
+        } else {
+            (self.nodes.1.clone(), self.nodes.0.clone())
+        }
+    }
+    pub fn size(&self) -> f64 {
+        (self.nodes.0.pos.get() - self.nodes.1.pos.get()).abs()
+    }
+    pub fn center(&self) -> f64 {
+        0.5 * (self.nodes.0.pos.get() + self.nodes.1.pos.get())
+    }
 }
 
 struct VLink {
-    id: JsId,
     top: Rc<HLink>,
     bottom: Rc<Node>,
+}
+
+impl VLink {
+    pub fn new(top: Rc<HLink>, bottom: Rc<Node>) -> Self {
+        VLink { top, bottom }
+    }
+    pub fn act(&self, elast: f64) {
+        let d = self.bottom.pos.get() - self.top.center();
+        let f = elast * d;
+        self.top.apply_force(f);
+        self.bottom.apply_force(-f);
+    }
+    pub fn intersect(&self, other: &VLink, elast: f64) {
+        if Rc::ptr_eq(&self.top, &other.top) {
+            return;
+        }
+        let (left, right) = if self.top.center() < other.top.center() {
+            (self, other)
+        } else {
+            (other, self)
+        };
+        let d = left.bottom.pos.get() - right.bottom.pos.get();
+        if d > -1.0 {
+            let f = elast * (d + 1.0);
+            left.bottom.apply_force(-f);
+            right.bottom.apply_force(f);
+        }
+    }
 }
 
 fn for_each_pair<'a, T: 'a, I, S, F>(seq: &'a S, f: F)
@@ -102,6 +184,12 @@ pub struct Solver {
     vlink_levels: HashMap<i32, Vec<Rc<VLink>>>,
 }
 
+impl Default for Solver {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[wasm_bindgen]
 impl Solver {
     pub fn new() -> Self {
@@ -116,42 +204,31 @@ impl Solver {
         }
     }
     pub fn add_node(&mut self, id: JsId, pos: f64, level: i32, callback: JsFunction) {
-        let node = Rc::new(Node {
-            id: id.clone(),
-            pos: Cell::new(pos),
-            vel: Cell::new(0.0),
-            level,
-            callback,
-        });
+        let node = Rc::new(Node::new(pos, level, callback));
         assert!(self.nodes.insert(id, node.clone()).is_none());
-        self.node_levels.entry(level)
+        self.node_levels
+            .entry(level)
             .or_insert_with(Vec::new)
             .push(node);
     }
     pub fn add_hlink(&mut self, id: JsId, left_id: JsId, right_id: JsId) {
         let left = self.nodes[&left_id].clone();
         let right = self.nodes[&right_id].clone();
-        let hlink = Rc::new(HLink {
-            id: id.clone(),
-            left: left.clone(),
-            right: right.clone(),
-        });
+        let hlink = Rc::new(HLink::new((left.clone(), right.clone())));
         assert!(self.hlinks.insert(id, hlink.clone()).is_none());
         assert_eq!(left.level, right.level);
-        self.hlink_levels.entry(left.level)
+        self.hlink_levels
+            .entry(left.level)
             .or_insert_with(Vec::new)
             .push(hlink);
     }
     pub fn add_vlink(&mut self, id: JsId, top_id: JsId, bottom_id: JsId) {
         let top = self.hlinks[&top_id].clone();
         let bottom = self.nodes[&bottom_id].clone();
-        let vlink = Rc::new(VLink {
-            id: id.clone(),
-            top,
-            bottom: bottom.clone(),
-        });
+        let vlink = Rc::new(VLink::new(top, bottom.clone()));
         assert!(self.vlinks.insert(id, vlink.clone()).is_none());
-        self.vlink_levels.entry(bottom.level)
+        self.vlink_levels
+            .entry(bottom.level)
             .or_insert_with(Vec::new)
             .push(vlink);
     }
@@ -162,6 +239,18 @@ impl Solver {
     pub fn step(&self, dt: f64) {
         for nodes in self.node_levels.values() {
             for_each_pair(nodes, |a, b| a.interact(b, ELAST.node));
+        }
+        for hlink in self.hlinks.values() {
+            hlink.act(ELAST.hor);
+        }
+        for vlink in self.vlinks.values() {
+            vlink.act(ELAST.ver);
+        }
+        for hlinks in self.hlink_levels.values() {
+            for_each_pair(hlinks, |a, b| a.intersect(b, ELAST.hor_inter));
+        }
+        for vlinks in self.vlink_levels.values() {
+            for_each_pair(vlinks, |a, b| a.intersect(b, ELAST.ver_inter));
         }
 
         for node in self.nodes.values() {
