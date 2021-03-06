@@ -15,6 +15,7 @@ function run(args, opts) {
     child.on('close', function (code) {
       if (code === 0) {
         resolve();
+        console.log();
       } else {
         reject(code);
       }
@@ -29,13 +30,21 @@ function npx(args) {
   return run(["npx"].concat(args));
 }
 
-fsp.mkdir("src/gen", { recursive: true})
+new Promise((resolve, _) => resolve())
+
+.then(_ => fsp.mkdir("src/gen", { recursive: true}))
 .then(_ => npx(["ts-interface-builder", "src/data/input.ts", "--outDir", "src/gen"]))
+
 .then(_ => npx(["sass3js", "-f", "ts", "style/defs.scss", "src/gen/style-defs.ts"]))
 .then(_ => npx(["sass", "style/main.scss", "output/style.css"]))
+
+.then(_ => run(["wasm-pack", "build", "solver", "--target", "web", "--out-dir", "../src/solver", "--out-name", "index"]))
+.then(_ => fsp.copyFile("src/solver/index_bg.wasm", "output/solver.wasm"))
+
 .then(_ => npx(["tsc"]))
-.then(_ => npx(["browserify", "build/main.js", "-o", "output/bundle.js", "--debug"]))
-.then(_ => run(["wasm-pack", "build", "--target", "web"], {cwd: "solver"}))
+
+.then(_ => npx(["esbuild", "build/main.js", "--bundle", "--outfile=output/bundle.js"]))
+
 .catch(err => {
   console.log(err);
   return 1;

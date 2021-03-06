@@ -16,7 +16,7 @@
   "homepage": "https://github.com/agerasev/family-tree",
   "dependencies": {
     "@types/jquery": "^3.5.5",
-    "browserify": "^17.0.0",
+    "esbuild": "^0.8.56",
     "jquery": "^3.5.1",
     "sass": "^1.32.8",
     "sass3js": "^1.0.8",

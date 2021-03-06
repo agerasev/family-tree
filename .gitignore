@@ -1,8 +1,9 @@
 /node_modules
 /package-lock.json
 
-/src/gen
 /build
 /output
+/src/gen
+/src/solver
 
 *.code-workspace

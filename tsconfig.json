@@ -9,11 +9,19 @@
       "ES2016",
       "dom"
     ],
-
+    "allowJs": true,
+    
+    "baseUrl": "src",
     "outDir": "build",
 
     "sourceMap": false,
     "inlineSourceMap": true,
     "inlineSources": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "build",
+    "build.js",
+    "output",
+  ],
 }
