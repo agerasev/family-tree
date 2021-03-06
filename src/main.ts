@@ -14,7 +14,11 @@ $(function () {
       let tree = new Tree(toml.parse(tree_toml));
       console.log(tree);
       let composer = new Composer($(document.body), new WasmLayout());
-      composer.createNode(tree.persons.get("17e71bf8")!, 0.0, 0);//.expandBottom();
+      let hash = window.location.hash.substr(1);
+      if (!tree.persons.has(hash)) {
+        hash = "17e71bf8";
+      }
+      composer.createNode(tree.persons.get(hash)!, 0.0, 0);//.expandBottom();
     });
   });
 });
