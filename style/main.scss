@@ -4,16 +4,16 @@
 @font-face {
   font-family: "RobotoCondensedEmbedded";
   src:
-    url('/fonts/roboto-condensed-v19-regular.woff2') format('woff2'),
-    url('/fonts/roboto-condensed-v19-regular.woff') format('woff');
+    url('../fonts/roboto-condensed-v19-regular.woff2') format('woff2'),
+    url('../fonts/roboto-condensed-v19-regular.woff') format('woff');
   font-weight: 400;
 }
 
 @font-face {
   font-family: "RobotoCondensedEmbedded";
   src:
-    url('/fonts/roboto-condensed-v19-700.woff2') format('woff2'),
-    url('/fonts/roboto-condensed-v19-700.woff') format('woff');
+    url('../fonts/roboto-condensed-v19-700.woff2') format('woff2'),
+    url('../fonts/roboto-condensed-v19-700.woff') format('woff');
   font-weight: 700;
 }
 
