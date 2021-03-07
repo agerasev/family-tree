@@ -6,14 +6,17 @@ import { PersonNode } from "./node";
 import style from "../../gen/style-defs";
 import { Crawler } from "../crawler";
 
-const link_margin = parseFloat(style.linkMargin);
 const stroke_width = parseFloat(style.linkStrokeWidth);
+const link_margin = parseFloat(style.linkMargin);
 const link_color = style.linkColor;
+const button_size = parseFloat(style.nodeButtonSize);
+const button_distance = parseFloat(style.nodeButtonDistance);
 
 export class HorizontalLink implements Entity {
   composer: Composer;
   nodes: [PersonNode, PersonNode];
   bottom: Map<string, VerticalLink>;
+  update_id: [number, number];
   html: JQuery<HTMLElement>;
   svg: JQuery<SVGElement>;
   buttons: NodeButton[];
@@ -23,6 +26,7 @@ export class HorizontalLink implements Entity {
   constructor(composer: Composer, left: PersonNode, right: PersonNode) {
     this.composer = composer;
     this.nodes = [left, right];
+    this.update_id = this.updateId();
     this.bottom = new Map<string, VerticalLink>();
     this.html = $(`
     <div class='horizontal-link'>
@@ -45,45 +49,64 @@ export class HorizontalLink implements Entity {
     this.updateButtons();
   }
 
+  needUpdate(): boolean {
+    const uid = this.updateId();
+    if (this.update_id[0] !== uid[0] || this.update_id[1] !== uid[1]) {
+      this.update_id = uid;
+      return true;
+    }
+    return false;
+  }
+  updateId(): [number, number] {
+    return [
+      this.composer.getUpdateId(this.nodes[0].position),
+      this.composer.getUpdateId(this.nodes[1].position),
+    ];
+  }
   updateButtons() {
     for (let button of this.buttons) {
       button.updateButtons();
     }
   }
-  updatePosition() {
-    let left = Math.min(this.nodes[0].position, this.nodes[1].position);
-    let width = Math.abs(this.nodes[0].position - this.nodes[1].position);
-    const px_width = this.composer.hsizeToPx(width);
-    const px_margin = link_margin;
-    this.html.css("left", (this.composer.hposToPx(left) - px_margin) + "px");
-    this.html.css("width", (px_width + 2 * px_margin) + "px");
-    let level = Math.max(this.nodes[0].level, this.nodes[1].level)
-    this.html.css("top", this.composer.vposToPx(level) + "px");
+  updatePosition(force?: boolean) {
+    const pos = [
+      this.composer.hposToPx(this.nodes[0].position),
+      this.composer.hposToPx(this.nodes[1].position),
+    ];
+    if (force || this.needUpdate()) {
+      const left = Math.min(pos[0], pos[1]);
+      const width = Math.abs(pos[0] - pos[1]);
+      const margin = link_margin;
+      this.html.css("left", (left - margin) + "px");
+      this.html.css("width", (width + 2 * margin) + "px");
+      const level = this.composer.vposToPx(Math.max(this.nodes[0].level, this.nodes[1].level));
+      this.html.css("top", level + "px");
 
-    const px_tail = 0.5 * PersonNode.box_height;
-    const px_height = HorizontalLink.height;
-    this.svg.width(px_width + 2 * px_margin);
-    this.svg.height(px_tail + px_height + px_margin);
-    this.svg.find("path").attr("d", `
-      M ${px_margin + 0} ${0}
-      L ${px_margin + 0} ${px_tail}
-      C ${px_margin + 0} ${px_tail + px_height},
-        ${px_margin + 0.5 * px_width} ${px_tail},
-        ${px_margin + 0.5 * px_width} ${px_tail + px_height}
-      C ${px_margin + 0.5 * px_width} ${px_tail},
-        ${px_margin + px_width} ${px_tail + px_height},
-        ${px_margin + px_width} ${px_tail}
-      L ${px_margin + px_width} ${0}
-    `);
+      const tail = PersonNode.box_height / 2;
+      const height = HorizontalLink.height;
+      this.svg.width(width + 2 * margin);
+      this.svg.height(tail + height + margin);
+      this.svg.find("path").attr("d", `
+        M ${margin + 0} ${0}
+        L ${margin + 0} ${tail}
+        C ${margin + 0} ${tail + height},
+          ${margin + 0.5 * width} ${tail},
+          ${margin + 0.5 * width} ${tail + height}
+        C ${margin + 0.5 * width} ${tail},
+          ${margin + width} ${tail + height},
+          ${margin + width} ${tail}
+        L ${margin + width} ${0}
+      `);
 
-    this.buttons[0].html.css(
-      "left",
-      (px_margin + 0.5 * px_width - parseFloat(style.nodeButtonSize) - 0.5 * parseFloat(style.nodeButtonDistance)) + "px",
-    );
-    this.buttons[1].html.css(
-      "left",
-      (px_margin + 0.5 * px_width + 0.5 * parseFloat(style.nodeButtonDistance)) + "px",
-    );
+      this.buttons[0].html.css(
+        "left",
+        (margin + width / 2 - button_size - button_distance / 2) + "px",
+      );
+      this.buttons[1].html.css(
+        "left",
+        (margin + width / 2 + button_distance / 2) + "px",
+      );
+    }
   }
   center(): number {
     return 0.5 * (this.nodes[0].position + this.nodes[1].position);
@@ -175,6 +198,7 @@ export class VerticalLink implements Entity {
   composer: Composer;
   top: HorizontalLink;
   bottom: PersonNode;
+  update_id: [number, number];
   html: JQuery<HTMLElement>;
   svg: JQuery<SVGElement>;
 
@@ -184,6 +208,7 @@ export class VerticalLink implements Entity {
     this.composer = composer;
     this.top = top;
     this.bottom = bottom;
+    this.update_id = this.updateId();
     this.html = $(`
     <div class='vertical-link'>
       <svg xmlns='http://www.w3.org/2000/svg'>
@@ -194,31 +219,46 @@ export class VerticalLink implements Entity {
     this.svg = this.html.find("svg");
   }
 
-  updatePosition() {
-    let top_center = this.top.center();
-    let bottom_center = this.bottom.position;
-    let left = Math.min(top_center, bottom_center);
-    let width = Math.abs(top_center - bottom_center);
-    const px_width = this.composer.hsizeToPx(width);
-    this.html.css("left", (this.composer.hposToPx(left) - link_margin) + "px");
-    this.html.css("width", (px_width + 2 * link_margin) + "px");
-    let level = Math.max(this.top.nodes[0].level, this.top.nodes[1].level);
-    this.html.css("top", (this.composer.vposToPx(level) + 0.5 * PersonNode.box_height + HorizontalLink.height) + "px");
+  needUpdate(): boolean {
+    const uid = this.updateId();
+    if (this.update_id[0] !== uid[0] || this.update_id[1] !== uid[1]) {
+      this.update_id = uid;
+      return true;
+    }
+    return false;
+  }
+  updateId(): [number, number] {
+    return [
+      this.composer.getUpdateId(this.top.center()),
+      this.composer.getUpdateId(this.bottom.position),
+    ];
+  }
+  updatePosition(force?: boolean) {
+    if (force || this.needUpdate()) {
+      let top_center = this.composer.hposToPx(this.top.center());
+      let bottom_center = this.composer.hposToPx(this.bottom.position);
+      let left = Math.min(top_center, bottom_center);
+      let width = Math.abs(top_center - bottom_center);
+      this.html.css("left", ((left) - link_margin) + "px");
+      this.html.css("width", (width + 2 * link_margin) + "px");
+      let level = Math.max(this.top.nodes[0].level, this.top.nodes[1].level);
+      this.html.css("top", (this.composer.vposToPx(level) + 0.5 * PersonNode.box_height + HorizontalLink.height) + "px");
 
-    const px_margin = link_margin;
-    const px_tail = 0.5 * PersonNode.box_height;
-    const px_height = VerticalLink.height;
-    this.svg.width(px_width + 2 * link_margin);
-    this.svg.height(px_height + px_tail);
-    const begin = this.composer.hsizeToPx(top_center - left);
-    const end = this.composer.hsizeToPx(bottom_center - left);
-    this.svg.find("path").attr("d", `
-      M ${px_margin + begin} ${0}
-      C ${px_margin + begin} ${px_height},
-        ${px_margin + end} ${0},
-        ${px_margin + end} ${px_height}
-      L ${px_margin + end} ${px_height + px_tail}
-    `);
+      const margin = link_margin;
+      const tail = 0.5 * PersonNode.box_height;
+      const height = VerticalLink.height;
+      this.svg.width(width + 2 * link_margin);
+      this.svg.height(height + tail);
+      const begin = top_center - left;
+      const end = bottom_center - left;
+      this.svg.find("path").attr("d", `
+        M ${margin + begin} ${0}
+        C ${margin + begin} ${height},
+          ${margin + end} ${0},
+          ${margin + end} ${height}
+        L ${margin + end} ${height + tail}
+      `);
+    }
   }
 
   id(): string {

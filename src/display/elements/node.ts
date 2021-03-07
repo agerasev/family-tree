@@ -12,6 +12,7 @@ export class PersonNode implements Entity {
   top: VerticalLink | null;
   side: Map<string, HorizontalLink>;
   position: number;
+  update_id: number;
   level: number;
   html: JQuery<HTMLElement>;
   buttons: NodeButton[];
@@ -27,6 +28,7 @@ export class PersonNode implements Entity {
     this.top = null;
     this.side = new Map<string, HorizontalLink>();
     this.position = position + 0.001 * Math.random();
+    this.update_id = this.getUpdateId();
     this.level = level;
 
     const name = this.person.name;
@@ -63,14 +65,27 @@ export class PersonNode implements Entity {
     this.updateButtons();
   }
 
+  getUpdateId(): number {
+    return this.composer.getUpdateId(this.position);
+  }
+  needUpdate(): boolean {
+    const uid = this.getUpdateId();
+    if (uid !== this.update_id) {
+      this.update_id = uid;
+      return true;
+    }
+    return false;
+  }
   updateButtons() {
     for (let button of this.buttons) {
       button.updateButtons();
     }
   }
-  updatePosition() {
-    this.html.css("left", this.composer.hposToPx(this.position) - 0.5 * PersonNode.container_width + "px");
-    this.html.css("top", this.composer.vposToPx(this.level) - 0.5 * PersonNode.container_height + "px");
+  updatePosition(force?: boolean) {
+    if (force || this.needUpdate()) {
+      this.html.css("left", this.composer.hposToPx(this.position) - 0.5 * PersonNode.container_width + "px");
+      this.html.css("top", this.composer.vposToPx(this.level) - 0.5 * PersonNode.container_height + "px");
+    }
   }
 
   id(): string {

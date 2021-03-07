@@ -5,6 +5,8 @@ import style from "../gen/style-defs";
 import { Layout, Solver } from "../layouts";
 
 export const side_shift = 0.1;
+const vertical_step = parseFloat(style.personVerticalStep);
+const horizontal_step = parseFloat(style.personHorizontalStep);
 
 export class Composer {
   nodes: Map<string, PersonNode>;
@@ -77,9 +79,9 @@ export class Composer {
       }
     };
   }
-  static node_step = parseFloat(style.personHorizontalStep);
+
   screenToNodePos(x: number): number {
-    return this.screenToViewport([x, 0.0])[0] / Composer.node_step;
+    return this.screenToViewport([x, 0.0])[0] / horizontal_step;
   }
   syncNodeDrag() {
     if (this.node_drag === null) {
@@ -87,7 +89,7 @@ export class Composer {
     }
     let node = this.nodes.get(this.node_drag.id)!;
     node.position = this.node_drag.pos;
-    node.updatePosition();
+    node.updatePosition(true);
     if (this.solver !== null) {
       this.solver.pullNode(node.id());
     }
@@ -154,7 +156,7 @@ export class Composer {
       this.nodes.set(person.id, node);
       this.anchor.append(node.html);
       this.registerNodeMouse(node);
-      node.updatePosition();
+      node.updatePosition(true);
       this.updateSolver();
       return node;
     }
@@ -167,7 +169,7 @@ export class Composer {
       let hlink = new HorizontalLink(this, left, right);
       this.hlinks.set(id, hlink);
       this.anchor.append(hlink.html);
-      hlink.updatePosition();
+      hlink.updatePosition(true);
       this.updateSolver();
       return hlink;
     }
@@ -180,7 +182,7 @@ export class Composer {
       let vlink = new VerticalLink(this, top, bottom);
       this.vlinks.set(id, vlink);
       this.anchor.append(vlink.html);
-      vlink.updatePosition();
+      vlink.updatePosition(true);
       this.updateSolver();
       return vlink;
     }
@@ -202,16 +204,19 @@ export class Composer {
   }
 
   vsizeToPx(vsize: number): number {
-    return parseFloat(style.personVerticalStep) * vsize;
+    return vertical_step * vsize;
   }
   vposToPx(vpos: number): number {
     return this.vsizeToPx(vpos);
   }
   hsizeToPx(hsize: number): number {
-    return parseFloat(style.personHorizontalStep) * hsize;
+    return horizontal_step * hsize;
   }
   hposToPx(hpos: number): number {
     return this.hsizeToPx(hpos);
+  }
+  getUpdateId(pos: number): number {
+    return Math.round(3 * this.vsizeToPx(pos) / this.zoom);
   }
 
   startAnimation() {
