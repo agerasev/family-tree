@@ -16,10 +16,8 @@ export class Composer {
   layout: Layout;
   solver: Solver | null = null;
   dirty: boolean = false;
-  loop: ReturnType<typeof window.requestAnimationFrame> | null = null;
-  prev_step: number = 0.0;
-  static min_step = 40.0;
-  static max_step = 80.0;
+  animate: boolean = false;
+  static time_step = 40.0;
 
   width: number;
   height: number;
@@ -217,12 +215,16 @@ export class Composer {
   }
 
   startAnimation() {
-    if (this.loop === null) {
+    if (!this.animate) {
       this.continueAnimation();
     }
   }
   continueAnimation() {
-    this.loop = window.requestAnimationFrame(this.solveCallback.bind(this));
+    this.animate = true;
+    setTimeout(this.solveCallback.bind(this), Composer.time_step);
+  }
+  stopAnimation() {
+    this.animate = false;
   }
   updateSolver() {
     this.dirty = true;
@@ -234,19 +236,8 @@ export class Composer {
     }
     this.startAnimation();
   }
-  stopAnimation() {
-    if (this.loop !== null) {
-      window.cancelAnimationFrame(this.loop);
-      this.loop = null;
-    }
-  }
   solveCallback(time: number) {
-    if (this.loop === null) {
-      return;
-    }
-    let dt = time - this.prev_step;
-    if (dt < Composer.min_step) {
-      this.continueAnimation();
+    if (!this.animate) {
       return;
     }
 
@@ -264,13 +255,12 @@ export class Composer {
       }
 
       this.solver.compute();
-      let cont = this.solver.step(1e-3 * Math.min(dt, Composer.max_step));
+      let cont = this.solver.step(1e-3 * Composer.time_step);
       if (cont) {
         this.continueAnimation();
       } else {
         this.stopAnimation();
       }
-      this.prev_step = time;
 
       this.solver.pushRefs();
       this.updateViewport();
