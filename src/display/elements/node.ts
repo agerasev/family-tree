@@ -32,7 +32,7 @@ export class PersonNode implements Entity {
     this.level = level;
 
     const name = this.person.name;
-    const first_family = name.family.length > 0 ? name.family[0] : null;
+    const first_family = name.family.length > 0 && name.family[0].length > 0 ? name.family[0] : null;
     this.html = $(`
       <div class='person-container' style='left: 0px; top: 0px;'>
         <div class='person-box ${this.person.gender == Gender.Male ? "person-male" : "person-female"}'>
