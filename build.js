@@ -30,6 +30,8 @@ function npx(args) {
   return run(["npx"].concat(args));
 }
 
+const debug = !process.argv.slice(2).includes("release");
+
 new Promise((resolve, _) => resolve())
 
 .then(_ => fsp.rmdir("build", { recursive: true })).catch(_ => {})
@@ -46,8 +48,15 @@ new Promise((resolve, _) => resolve())
 
 .then(_ => npx(["tsc"]))
 
-.then(_ => npx(["esbuild", "build/main.js", "--bundle", "--outfile=output/bundle.js", "--sourcemap=inline"]))
-
+.then(_ => {
+  let args = ["esbuild", "build/main.js", "--bundle", "--outfile=output/bundle.js"];
+  if (debug) {
+    args = args.concat(["--sourcemap=inline"]);
+  } else {
+    args = args.concat(["--minify"]);
+  }
+  return npx(args);
+})
 .catch(err => {
   console.log(err);
   return 1;
