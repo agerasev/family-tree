@@ -42,7 +42,11 @@ new Promise((resolve, _) => resolve())
 .then(_ => npx(["sass", "style/main.scss", "output/style.css"]))
 
 .then(_ => run(["wasm-pack", "build", "solver", "--target", "web", "--out-dir", "../src/solver", "--out-name", "index"]))
-.then(_ => fsp.copyFile("src/solver/index_bg.wasm", "output/solver.wasm"))
+.then(_ => run(["wasm-opt", "-Os", "src/solver/index_bg.wasm", "-o", "output/solver.wasm"]))
+.catch(_ => {
+  console.log("Error running wasm-opt, maybe you should install binaryen?");
+  return fsp.copyFile("src/solver/index_bg.wasm", "output/solver.wasm");
+})
 
 .then(_ => npx(["tsc"]))
 
