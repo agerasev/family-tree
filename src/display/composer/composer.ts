@@ -10,6 +10,11 @@ export const side_shift = 0.1;
 const vertical_step = parseFloat(style.personVerticalStep);
 const horizontal_step = parseFloat(style.personHorizontalStep);
 
+export type Selection = {
+  id: string,
+  type: "node" | "hlink",
+};
+
 export class Composer {
   nodes: Map<string, PersonNode>;
   hlinks: Map<string, HorizontalLink>;
@@ -19,6 +24,12 @@ export class Composer {
 
   viewport: Viewport;
   animator: Animator;
+
+  node_drag: {
+    id: string;
+    pos: number | null;
+  } | null = null;
+  selected: Selection | null = null;
 
   constructor(parent: JQuery<HTMLElement>, layout: Layout) {
     this.nodes = new Map<string, PersonNode>();
@@ -33,36 +44,88 @@ export class Composer {
     this.anchor = this.html.find(".composer-anchor");
     parent.append(this.html);
 
-    this.viewport = new Viewport(this.html, this.anchor);
+    this.viewport = new Viewport(this);
     this.animator = new Animator(this, layout);
   }
 
   screenToNodePos(x: number): number {
     return this.viewport.screenToViewport([x, 0.0])[0] / horizontal_step;
   }
+  select(sel: Selection | null) {
+    if (this.selected !== null) {
+      switch (this.selected.type) {
+        case "node": {
+          this.nodes.get(this.selected.id)!.html.removeClass("person-container-hover");
+          break;
+        }
+        case "hlink": {
+          this.hlinks.get(this.selected.id)!.html.removeClass("horizontal-link-hover");
+          break;
+        }
+      }
+    }
+    if (sel !== null) {
+      switch (sel.type) {
+        case "node": {
+          this.nodes.get(sel.id)!.html.addClass("person-container-hover");
+          break;
+        }
+        case "hlink": {
+          this.hlinks.get(sel.id)!.html.addClass("horizontal-link-hover");
+          break;
+        }
+      }
+    }
+    this.selected = sel;
+  }
   syncNodeDrag() {
-    if (this.viewport.node_drag === null) {
+    if (this.node_drag === null) {
       throw Error("Node is not dragging now");
     }
-    let node = this.nodes.get(this.viewport.node_drag.id)!;
-    node.position = this.screenToNodePos(this.viewport.node_drag.pos);
-    node.updatePosition(true);
-    if (this.animator.solver !== null) {
-      this.animator.solver.pullNode(node.id());
+    if (this.node_drag.pos !== null) {
+      let node = this.nodes.get(this.node_drag.id)!;
+      node.position = this.screenToNodePos(this.node_drag.pos);
+      node.updatePosition(true);
+      if (this.animator.solver !== null) {
+        this.animator.solver.pullNode(node.id());
+      }
     }
   }
   registerNodeMouse(node: PersonNode) {
-    let elem = node.html.find(".person-box")[0];
-    elem.onmousedown = (e: MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.viewport.node_drag = {
+    const container = node.html[0];
+    const box = node.html.find(".person-box")[0];
+    const on_down = () => {
+      this.node_drag = {
         id: node.id(),
-        pos: this.screenToNodePos(e.clientX),
+        pos: null,
       };
       this.viewport.drag = true;
       this.animator.restartSolver();
     };
+    box.addEventListener("mousedown", (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      on_down();
+    });
+    box.addEventListener("touchstart", (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length !== 1) {
+        return;
+      }
+      e.stopPropagation();
+      on_down();
+      this.select({ id: node.id(), type: "node" });
+    });
+  }
+  registerHorizontalLinkMouse(hlink: HorizontalLink) {
+    hlink.html[0].addEventListener("touchstart", (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length !== 1) {
+        return;
+      }
+      e.stopPropagation();
+      this.select({ id: hlink.id(), type: "hlink" });
+    });
   }
 
   createNode(person: Person, position: number, level: number): PersonNode {
@@ -86,6 +149,7 @@ export class Composer {
       let hlink = new HorizontalLink(this, left, right);
       this.hlinks.set(id, hlink);
       this.anchor.append(hlink.html);
+      this.registerHorizontalLinkMouse(hlink);
       hlink.updatePosition(true);
       this.animator.updateSolver();
       return hlink;

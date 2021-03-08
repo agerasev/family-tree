@@ -87,7 +87,7 @@ body {
   text-shadow: 0 0 4px black;
 }
 
-.person-container:hover .node-button {
+.person-container:hover .node-button, .person-container-hover .node-button {
   visibility: visible;
 }
 
@@ -111,6 +111,6 @@ body {
   //background-color: rgba(0,0,0,0.2);
 }
 
-.horizontal-link:hover .node-button {
+.horizontal-link:hover .node-button, .horizontal-link-hover .node-button {
   visibility: visible;
 }

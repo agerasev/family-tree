@@ -30,4 +30,3 @@ Family tree interactive explorer
 + `window.onresize` change viewport size.
 + Mouse motion is doubled in Chromium.
 + Make anchor invisible.
-+ Touchscreen support.

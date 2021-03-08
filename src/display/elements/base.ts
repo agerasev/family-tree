@@ -21,6 +21,7 @@ export class NodeButton {
       </div>
     `)
     html.on("click", this.run)
+    html.on("touchstart", this.run)
     this.html = html;
   }
 

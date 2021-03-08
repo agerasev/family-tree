@@ -1,23 +1,19 @@
 import $ = require("jquery");
+import { Composer } from "./composer";
 
 export class Viewport {
-  html: JQuery<HTMLElement>;
-  anchor: JQuery<HTMLElement>;
+  composer: Composer;
 
   width: number;
   height: number;
   position: [number, number];
   zoom: number = 1.0;
   drag: boolean = false;
-  drag_pos: [number, number] = [0, 0];
-  node_drag: {
-    id: string;
-    pos: number;
-  } | null = null;
+  drag_pos: [number, number] | null = null;
+  pinch_length: number | null = null;
 
-  constructor(html: JQuery<HTMLElement>, anchor: JQuery<HTMLElement>) {
-    this.html = html;
-    this.anchor = anchor;
+  constructor(composer: Composer) {
+    this.composer = composer;
 
     [this.width, this.height] = [0, 0];
     this.position = [ 0.0, 0.0 ];
@@ -30,63 +26,93 @@ export class Viewport {
     };
     const on_up_or_leave = () => {
       this.drag = false;
-      this.node_drag = null;
+      this.composer.node_drag = null;
     };
     const on_move = ([x, y]: [number, number]) => {
-      if (this.node_drag === null) {
-        this.onShift([x - this.drag_pos[0], y - this.drag_pos[1]]);
+      if (this.composer.node_drag === null) {
+        if (this.drag_pos !== null) {
+          this.onShift([x - this.drag_pos[0], y - this.drag_pos[1]]);
+        }
         this.drag_pos = [x, y];
       } else {
-        this.node_drag.pos = x;
+        this.composer.node_drag.pos = x;
       }
     };
 
-    this.html[0].onmousedown = (e: MouseEvent) => {
+    const raw_html = this.composer.html[0];
+
+    raw_html.addEventListener("mousedown", (e: MouseEvent) => {
       e.preventDefault();
       on_down([e.clientX, e.clientY]);
-    };
-    this.html[0].onmouseup = (e: MouseEvent) => {
+    });
+    raw_html.addEventListener("mouseup", (e: MouseEvent) => {
       e.preventDefault();
       on_up_or_leave();
-    };
-    this.html[0].onmouseleave = (e: MouseEvent) => {
+    });
+    raw_html.addEventListener("mouseleave", (e: MouseEvent) => {
       e.preventDefault();
       on_up_or_leave();
-    };
-    this.html[0].onmousemove = (e: MouseEvent) => {
+    });
+    raw_html.addEventListener("mousemove", (e: MouseEvent) => {
       if (this.drag) {
         e.preventDefault();
         on_move([e.clientX, e.clientY]);
       }
-    };
-    this.html[0].onwheel = (e: WheelEvent) => {
+    });
+    raw_html.addEventListener("wheel", (e: WheelEvent) => {
       e.preventDefault();
-      this.onZoom(e.deltaY, [e.clientX, e.clientY]);
-    };
+      this.onZoom(Math.pow(2.0, 0.25 * Math.sign(-e.deltaY)), [e.clientX, e.clientY]);
+    });
 
-    this.html[0].ontouchstart = (e: TouchEvent) => {
+    raw_html.addEventListener("touchstart", (e: TouchEvent) => {
       e.preventDefault();
+      this.drag_pos = null;
+      this.pinch_length = null;
+      if (e.touches.length !== 1) {
+        return;
+      }
       on_down([e.touches[0].clientX, e.touches[0].clientY]);
-      alert("On down");
-    };
-    this.html[0].ontouchend = (e: TouchEvent) => {
+      this.composer.select(null);
+    });
+    raw_html.addEventListener("touchend", (e: TouchEvent) => {
       e.preventDefault();
+      this.drag_pos = null;
+      this.pinch_length = null;
+      if (e.touches.length !== 0) {
+        return;
+      }
       on_up_or_leave();
-    };
-    this.html[0].ontouchmove = (e: TouchEvent) => {
+    });
+    raw_html.addEventListener("touchmove", (e: TouchEvent) => {
       e.preventDefault();
       switch (e.touches.length) {
         case 1: {
+          this.pinch_length = null;
           on_move([e.touches[0].clientX, e.touches[0].clientY]);
+          break;
         }
         case 2: {
+          this.drag_pos = null;
+          this.composer.node_drag = null;
+          const [x0, y0] = [e.touches[0].clientX, e.touches[0].clientY];
+          const [x1, y1] = [e.touches[1].clientX, e.touches[1].clientY];
+          const [cx, cy] = [0.5 * (x0 + x1), 0.5 * (y0 + y1)];
+          const [dx, dy] = [x1 - x0, y1 - y0];
+          const l = Math.sqrt(dx * dx + dy * dy);
+          if (this.pinch_length !== null) {
+            this.onZoom(l / this.pinch_length, [cx, cy]);
+          }
+          this.pinch_length = l;
           break;
         }
         default: {
+          this.drag_pos = null;
+          this.pinch_length = null;
+          this.composer.node_drag = null;
           break;
         }
       }
-    };
+    });
   }
 
   screenToViewport([x, y]: [number, number]): [number, number] {
@@ -103,20 +129,20 @@ export class Viewport {
   }
   updateViewport() {
     let [cx, cy] = this.viewportToScreen([0.0, 0.0]);
-    this.anchor.css("left", cx + "px");
-    this.anchor.css("top", cy + "px");
+    this.composer.anchor.css("left", cx + "px");
+    this.composer.anchor.css("top", cy + "px");
     //this.anchor.css("scale", (1.0 / this.zoom).toString());
-    this.anchor.css("transform", "scale(" + (1.0 / this.zoom).toString() + ")");
+    this.composer.anchor.css("transform", "scale(" + (1.0 / this.zoom).toString() + ")");
   }
   updateScreen() {
-    let rect = this.html[0].getBoundingClientRect();
+    let rect = this.composer.html[0].getBoundingClientRect();
     this.width = rect.width;
     this.height = rect.height;
     this.updateViewport();
   }
 
-  onZoom(delta: number, [sx, sy] : [number, number]) {
-    let zoom = this.zoom * Math.pow(2.0, 0.25 * Math.sign(delta));
+  onZoom(factor: number, [sx, sy] : [number, number]) {
+    let zoom = this.zoom / factor;
     let dz = this.zoom - zoom;
     this.position[0] += (sx - 0.5 * this.width) * dz;
     this.position[1] += (sy - 0.5 * this.height) * dz;

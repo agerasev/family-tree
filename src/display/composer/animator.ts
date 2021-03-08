@@ -49,7 +49,7 @@ export class Animator {
       if (this.solver === null) {
         throw Error("Solver is null");
       }
-      if (this.composer.viewport.node_drag !== null) {
+      if (this.composer.node_drag !== null) {
         this.composer.syncNodeDrag();
         this.solver.reset();
       }

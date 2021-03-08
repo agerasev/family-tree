@@ -32,6 +32,9 @@ function npx(args) {
 
 new Promise((resolve, _) => resolve())
 
+.then(_ => fsp.rmdir("build", { recursive: true })).catch(_ => {})
+.then(_ => fsp.rmdir("output", { recursive: true })).catch(_ => {})
+
 .then(_ => fsp.mkdir("src/gen", { recursive: true}))
 .then(_ => npx(["ts-interface-builder", "src/data/input.ts", "--outDir", "src/gen"]))
 
