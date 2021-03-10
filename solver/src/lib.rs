@@ -22,26 +22,33 @@ pub struct Elast {
     pub ver_inter: f64,
 }
 
-pub const MAX_STEP: f64 = 0.1;
+pub const MAX_STEP: f64 = 1.0;
 
 pub const ELAST: Elast = Elast {
-    node: 1.0,
-    hor: 0.2,
-    ver: 0.1,
+    node: 2.0,
+    hor: 0.5,
+    ver: 0.5,
     hor_inter: 5.0,
     ver_inter: 5.0,
 };
 
+pub const STAGES: usize = 4;
+
 struct Node {
-    pos: Cell<f64>,
-    vel: Cell<f64>,
+    pub pos: Cell<f64>,
+    pub vel: Cell<f64>,
     level: i32,
     callback: JsFunction,
 }
 
 impl Node {
     fn new(pos: f64, level: i32, callback: JsFunction) -> Self {
-        Self { pos: Cell::new(pos), vel: Cell::new(0.0), level, callback }
+        Self {
+            pos: Cell::new(pos),
+            vel: Cell::new(0.0),
+            level,
+            callback,
+        }
     }
     fn apply_force(&self, f: f64) {
         self.vel.set(self.vel.get() + f);
@@ -82,7 +89,7 @@ impl HLink {
     }
     pub fn act(&self, elast: f64) {
         let d = self.nodes.0.pos.get() - self.nodes.1.pos.get();
-        let f = elast * d;
+        let f = elast * d.clamp(-1.0, 1.0);
         self.nodes.0.apply_force(-f);
         self.nodes.1.apply_force(f);
     }
@@ -154,7 +161,7 @@ impl VLink {
         };
         let d = left.bottom.pos.get() - right.bottom.pos.get();
         if d > -1.0 {
-            let f = elast * (d + 1.0);
+            let f = elast * (d + 1.0).clamp(-1.0, 1.0);
             left.bottom.apply_force(-f);
             right.bottom.apply_force(f);
         }
@@ -175,21 +182,35 @@ where
     }
 }
 
-#[wasm_bindgen]
-pub struct Solver {
-    nodes: HashMap<JsId, Rc<Node>>,
-    hlinks: HashMap<JsId, Rc<HLink>>,
-    vlinks: HashMap<JsId, Rc<VLink>>,
+struct Rk4 {
+    pub pos: f64,
+    pub vels: [f64; 4],
+}
 
-    node_levels: HashMap<i32, Vec<Rc<Node>>>,
-    hlink_levels: HashMap<i32, Vec<Rc<HLink>>>,
-    vlink_levels: HashMap<i32, Vec<Rc<VLink>>>,
+impl Default for Rk4 {
+    fn default() -> Self {
+        Self {
+            pos: 0.0,
+            vels: [0.0; 4],
+        }
+    }
 }
 
 impl Default for Solver {
     fn default() -> Self {
         Self::new()
     }
+}
+
+#[wasm_bindgen]
+pub struct Solver {
+    nodes: HashMap<JsId, (Rc<Node>, Rk4)>,
+    hlinks: HashMap<JsId, Rc<HLink>>,
+    vlinks: HashMap<JsId, Rc<VLink>>,
+
+    node_levels: HashMap<i32, Vec<Rc<Node>>>,
+    hlink_levels: HashMap<i32, Vec<Rc<HLink>>>,
+    vlink_levels: HashMap<i32, Vec<Rc<VLink>>>,
 }
 
 #[wasm_bindgen]
@@ -207,15 +228,15 @@ impl Solver {
     }
     pub fn add_node(&mut self, id: JsId, pos: f64, level: i32, callback: JsFunction) {
         let node = Rc::new(Node::new(pos, level, callback));
-        assert!(self.nodes.insert(id, node.clone()).is_none());
+        assert!(self.nodes.insert(id, (node.clone(), Rk4::default())).is_none());
         self.node_levels
             .entry(level)
             .or_insert_with(Vec::new)
             .push(node);
     }
     pub fn add_hlink(&mut self, id: JsId, left_id: JsId, right_id: JsId) {
-        let left = self.nodes[&left_id].clone();
-        let right = self.nodes[&right_id].clone();
+        let left = self.nodes[&left_id].0.clone();
+        let right = self.nodes[&right_id].0.clone();
         let hlink = Rc::new(HLink::new((left.clone(), right.clone())));
         assert!(self.hlinks.insert(id, hlink.clone()).is_none());
         assert_eq!(left.level, right.level);
@@ -226,7 +247,7 @@ impl Solver {
     }
     pub fn add_vlink(&mut self, id: JsId, top_id: JsId, bottom_id: JsId) {
         let top = self.hlinks[&top_id].clone();
-        let bottom = self.nodes[&bottom_id].clone();
+        let bottom = self.nodes[&bottom_id].0.clone();
         let vlink = Rc::new(VLink::new(top, bottom.clone()));
         assert!(self.vlinks.insert(id, vlink.clone()).is_none());
         self.vlink_levels
@@ -235,12 +256,12 @@ impl Solver {
             .push(vlink);
     }
     pub fn update_node(&mut self, id: JsId, pos: f64) {
-        self.nodes[&id].pos.set(pos);
+        self.nodes[&id].0.pos.set(pos);
     }
 
-    pub fn compute(&self) {
+    pub fn compute(&mut self) {
         for node in self.nodes.values() {
-            node.clear();
+            node.0.clear();
         }
 
         for nodes in self.node_levels.values() {
@@ -259,15 +280,53 @@ impl Solver {
             for_each_pair(vlinks, |a, b| a.intersect(b, ELAST.ver_inter));
         }
     }
-
-    pub fn step(&self, dt: f64) {
+    pub fn step(&mut self, dt: f64) {
         for node in self.nodes.values() {
-            node.step(dt);
+            node.0.step(dt);
         }
     }
+
+    pub fn solve(&mut self, dt: f64) {
+        // Runge-Kutta 4 method
+        self.nodes.values_mut().for_each(|(node, rk4)| rk4.pos = node.pos.get());
+        
+        // Step 1
+        self.compute();
+        self.nodes.values_mut().for_each(|(node, rk4)| rk4.vels[0] = node.vel.get());
+
+        // Step 2
+        self.step(dt / 2.0);
+        self.compute();
+        self.nodes.values_mut().for_each(|(node, rk4)| rk4.vels[1] = node.vel.get());
+
+        // Step 3
+        self.nodes.values_mut().for_each(|(node, rk4)| node.pos.set(rk4.pos));
+        self.step(dt / 2.0);
+        self.compute();
+        self.nodes.values_mut().for_each(|(node, rk4)| rk4.vels[2] = node.vel.get());
+
+        // Step 4
+        self.nodes.values_mut().for_each(|(node, rk4)| node.pos.set(rk4.pos));
+        self.step(dt);
+        self.compute();
+        self.nodes.values_mut().for_each(|(node, rk4)| rk4.vels[3] = node.vel.get());
+
+        // Sum up
+        self.nodes.values_mut().for_each(|(node, rk4)| {
+            node.pos.set(rk4.pos);
+            node.vel.set((
+                rk4.vels[0] +
+                2.0 * rk4.vels[1] +
+                2.0 * rk4.vels[2] +
+                rk4.vels[3]
+            ) / 6.0);
+        });
+        self.step(dt);
+    }
+
     pub fn sync(&self) {
         for node in self.nodes.values() {
-            node.sync();
+            node.0.sync();
         }
     }
 }

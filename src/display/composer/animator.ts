@@ -54,8 +54,7 @@ export class Animator {
         this.solver.reset();
       }
 
-      this.solver.compute();
-      let cont = this.solver.step(1e-3 * Animator.time_step);
+      let cont = this.solver.solve(1e-3 * Animator.time_step);
       if (cont) {
         this.continueAnimation();
       } else {

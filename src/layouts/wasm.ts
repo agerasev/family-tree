@@ -32,10 +32,7 @@ export class WasmSolver implements Solver {
       this.native.add_vlink(id, vlink.top.id(), vlink.bottom.id());
     }
   }
-  compute() {
-    this.native.compute();
-  }
-  step(dt?: number): boolean {
+  solve(dt?: number): boolean {
     if (dt === undefined) {
       throw Error("Time step must be defined");
     }
@@ -43,7 +40,7 @@ export class WasmSolver implements Solver {
       return false;
     }
 
-    this.native.step(dt);
+    this.native.solve(dt);
     this.time += dt;
 
     return true;

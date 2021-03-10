@@ -293,7 +293,6 @@ export class SpringSolver implements Solver {
       forEachPair(vlinks, (a, b) => a.intersect(b, elast.ver_inter));
     }
   }
-  
   step(dt?: number): boolean {
     if (dt === undefined) {
       throw Error("Time step must be defined");
@@ -308,6 +307,10 @@ export class SpringSolver implements Solver {
     this.time += dt;
 
     return true;
+  }
+  solve(dt?: number): boolean {
+    this.compute();
+    return this.step(dt);
   }
   pushRefs() {
     for (let [_, node] of this.nodes) {
