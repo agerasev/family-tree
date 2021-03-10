@@ -1,7 +1,7 @@
 [package]
 name = "family_tree_graph_layout_solver"
 description = "Family tree graph layout solver"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Alexey Gerasev <alexey.gerasev@gmail.com>"]
 edition = "2018"
 

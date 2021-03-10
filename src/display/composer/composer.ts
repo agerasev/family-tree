@@ -85,9 +85,10 @@ export class Composer {
     if (this.node_drag.pos !== null) {
       let node = this.nodes.get(this.node_drag.id)!;
       node.position = this.screenToNodePos(this.node_drag.pos);
-      node.updatePosition(true);
       if (this.animator.solver !== null) {
         this.animator.solver.pullNode(node.id());
+      } else {
+        node.updatePosition(true);
       }
     }
   }
