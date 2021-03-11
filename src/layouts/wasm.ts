@@ -73,7 +73,7 @@ export class WasmLayout implements Layout {
     vlinks: Map<string, VerticalLink>,
   ): WasmSolver {
     return new WasmSolver(
-      8.0,
+      10.0,
       nodes,
       hlinks,
       vlinks,
