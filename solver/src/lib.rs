@@ -25,11 +25,11 @@ pub struct Elast {
 pub const MAX_STEP: f64 = 1.0;
 
 pub const ELAST: Elast = Elast {
-    node: 4.0,
-    hor: 1.0,
-    ver: 0.5,
-    hor_inter: 10.0,
-    ver_inter: 10.0,
+    node: 2.0,
+    hor: 0.5,
+    ver: 0.25,
+    hor_inter: 5.0,
+    ver_inter: 5.0,
 };
 
 pub const STAGES: usize = 4;

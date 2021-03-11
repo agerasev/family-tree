@@ -4,7 +4,7 @@ import { PersonNode, HorizontalLink, VerticalLink } from "../elements";
 import style from "../../gen/style-defs";
 import { Layout, Solver } from "../../layouts";
 import { Viewport } from "./viewport";
-import { Animator } from "./animator";
+import { Animator, FrameTimer } from "./animator";
 
 export const side_shift = 0.1;
 const vertical_step = parseFloat(style.personVerticalStep);
@@ -45,7 +45,7 @@ export class Composer {
     parent.append(this.html);
 
     this.viewport = new Viewport(this);
-    this.animator = new Animator(this, layout);
+    this.animator = new Animator(this, layout, new FrameTimer());
   }
 
   screenToNodePos(x: number): number {
