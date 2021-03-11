@@ -83,8 +83,8 @@ export class PersonNode implements Entity {
   }
   updatePosition(force?: boolean) {
     if (force || this.needUpdate()) {
-      this.html.css("left", this.composer.hposToPx(this.position) - 0.5 * PersonNode.container_width + "px");
-      this.html.css("top", this.composer.vposToPx(this.level) - 0.5 * PersonNode.container_height + "px");
+      this.html[0].style.left = this.composer.hposToPx(this.position) - 0.5 * PersonNode.container_width + "px";
+      this.html[0].style.top = this.composer.vposToPx(this.level) - 0.5 * PersonNode.container_height + "px";
     }
   }
 

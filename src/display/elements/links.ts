@@ -74,19 +74,21 @@ export class HorizontalLink implements Entity {
       this.composer.hposToPx(this.nodes[1].position),
     ];
     if (force || this.needUpdate()) {
+      const raw_html = this.html[0];
       const left = Math.min(pos[0], pos[1]);
       const width = Math.abs(pos[0] - pos[1]);
       const margin = link_margin;
-      this.html.css("left", (left - margin) + "px");
-      this.html.css("width", (width + 2 * margin) + "px");
+      raw_html.style.left = (left - margin) + "px";
+      raw_html.style.width = (width + 2 * margin) + "px";
       const level = this.composer.vposToPx(Math.max(this.nodes[0].level, this.nodes[1].level));
-      this.html.css("top", level + "px");
+      raw_html.style.top = level + "px";
 
+      const raw_svg = this.svg[0];
       const tail = PersonNode.box_height / 2;
       const height = HorizontalLink.height;
-      this.svg.width(width + 2 * margin);
-      this.svg.height(tail + height + margin);
-      this.svg.find("path").attr("d", `
+      raw_svg.setAttribute("width", (width + 2 * margin).toString());
+      raw_svg.setAttribute("height", (tail + height + margin).toString());
+      raw_svg.getElementsByTagName("path")[0].setAttribute("d", `
         M ${margin + 0} ${0}
         L ${margin + 0} ${tail}
         C ${margin + 0} ${tail + height},
@@ -98,14 +100,10 @@ export class HorizontalLink implements Entity {
         L ${margin + width} ${0}
       `);
 
-      this.buttons[0].html.css(
-        "left",
-        (margin + width / 2 - button_size - button_distance / 2) + "px",
-      );
-      this.buttons[1].html.css(
-        "left",
-        (margin + width / 2 + button_distance / 2) + "px",
-      );
+      this.buttons[0].html[0].style.left =
+        (margin + width / 2 - button_size - button_distance / 2) + "px";
+      this.buttons[1].html[0].style.left =
+        (margin + width / 2 + button_distance / 2) + "px";
     }
   }
   center(): number {
@@ -235,23 +233,25 @@ export class VerticalLink implements Entity {
   }
   updatePosition(force?: boolean) {
     if (force || this.needUpdate()) {
+      const raw_html = this.html[0];
       let top_center = this.composer.hposToPx(this.top.center());
       let bottom_center = this.composer.hposToPx(this.bottom.position);
       let left = Math.min(top_center, bottom_center);
       let width = Math.abs(top_center - bottom_center);
-      this.html.css("left", ((left) - link_margin) + "px");
-      this.html.css("width", (width + 2 * link_margin) + "px");
+      raw_html.style.left = ((left) - link_margin) + "px";
+      raw_html.style.width = (width + 2 * link_margin) + "px";
       let level = Math.max(this.top.nodes[0].level, this.top.nodes[1].level);
-      this.html.css("top", (this.composer.vposToPx(level) + 0.5 * PersonNode.box_height + HorizontalLink.height) + "px");
+      raw_html.style.top = (this.composer.vposToPx(level) + 0.5 * PersonNode.box_height + HorizontalLink.height) + "px";
 
+      const raw_svg = this.svg[0];
       const margin = link_margin;
       const tail = 0.5 * PersonNode.box_height;
       const height = VerticalLink.height;
-      this.svg.width(width + 2 * link_margin);
-      this.svg.height(height + tail);
+      raw_svg.setAttribute("width", (width + 2 * link_margin).toString());
+      raw_svg.setAttribute("height", (height + tail).toString());
       const begin = top_center - left;
       const end = bottom_center - left;
-      this.svg.find("path").attr("d", `
+      raw_svg.getElementsByTagName("path")[0].setAttribute("d", `
         M ${margin + begin} ${0}
         C ${margin + begin} ${height},
           ${margin + end} ${0},
