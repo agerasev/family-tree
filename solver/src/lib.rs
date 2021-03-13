@@ -35,6 +35,7 @@ pub const ELAST: Elast = Elast {
 pub const STAGES: usize = 4;
 
 struct Node {
+    pub rm: Cell<f64>,
     pub pos: Cell<f64>,
     pub vel: Cell<f64>,
     level: i32,
@@ -44,6 +45,7 @@ struct Node {
 impl Node {
     fn new(pos: f64, level: i32, callback: JsFunction) -> Self {
         Self {
+            rm: Cell::new(1.0),
             pos: Cell::new(pos),
             vel: Cell::new(0.0),
             level,
@@ -51,7 +53,7 @@ impl Node {
         }
     }
     fn apply_force(&self, f: f64) {
-        self.vel.set(self.vel.get() + f);
+        self.vel.set(self.vel.get() + f * self.rm.get());
     }
     fn step(&self, dt: f64) {
         self.pos.set(self.pos.get() + (self.vel.get() * dt).clamp(-MAX_STEP, MAX_STEP));
@@ -84,8 +86,10 @@ impl HLink {
         Self { nodes }
     }
     pub fn apply_force(&self, f: f64) {
-        self.nodes.0.apply_force(f / 2.0);
-        self.nodes.1.apply_force(f / 2.0);
+        let rm = (self.nodes.0.rm.get(), self.nodes.1.rm.get());
+        let sm = rm.0 + rm.1;
+        self.nodes.0.apply_force(f * rm.1 / sm);
+        self.nodes.1.apply_force(f * rm.0 / sm);
     }
     pub fn act(&self, elast: f64) {
         let d = self.nodes.0.pos.get() - self.nodes.1.pos.get();
@@ -256,7 +260,9 @@ impl Solver {
             .push(vlink);
     }
     pub fn update_node(&mut self, id: JsId, pos: f64) {
-        self.nodes[&id].0.pos.set(pos);
+        let node = &self.nodes[&id].0;
+        node.pos.set(pos);
+        node.rm.set(0.0);
     }
 
     pub fn compute(&mut self) {
@@ -322,6 +328,9 @@ impl Solver {
             ) / 6.0);
         });
         self.step(dt);
+
+        // Restore mass
+        self.nodes.values().for_each(|(node, _)| node.rm.set(1.0));
     }
 
     pub fn sync(&self) {
