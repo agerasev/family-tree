@@ -34,13 +34,6 @@ export class Name {
       obj.patronymic,
     );
   }
-
-  static createUnknown(): Name {
-    return new Name("");
-  }
-  isUnknown(): boolean {
-    return this.given.length === 0 && this.family.length === 0 && this.patronymic === null;
-  }
 }
 
 export enum Gender {
@@ -131,8 +124,8 @@ export class Event {
 
 export class Person {
   id: string;
-  name: Name;
   gender: Gender;
+  name: Name | null;
   parents: {
     father: Person,
     mother: Person,
@@ -146,14 +139,14 @@ export class Person {
 
   constructor(
     id: string,
-    name: Name,
     gender: Gender,
+    name?: Name,
     events?: Event[],
     image?: string,
   ) {
     this.id = id;
-    this.name = name;
     this.gender = gender;
+    this.name = name || null;
     this.parents = null;
 
     this.children = [];
@@ -182,8 +175,8 @@ export class Person {
     checkers.InPerson.strictCheck(obj);
     return new Person(
       obj.id,
-      Name.fromDict(obj.name),
       genderFromText(obj.gender),
+      obj.name ? Name.fromDict(obj.name) : undefined,
       obj.events ? obj.events.map(evt => Event.readDict(evt)) : undefined,
       obj.image,
     );
@@ -192,12 +185,11 @@ export class Person {
   static createUnknown(gender: Gender): Person {
     return new Person(
       randomId(),
-      Name.createUnknown(),
       gender,
     );
   }
   isUnknown(): boolean {
-    return this.name.isUnknown();
+    return this.name === null;
   }
 
   addMarriage(marriage: Marriage) {

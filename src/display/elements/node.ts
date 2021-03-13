@@ -32,16 +32,22 @@ export class PersonNode implements Entity {
     this.level = level;
 
     const name = this.person.name;
-    const first_family = name.family.length > 0 && name.family[0].length > 0 ? name.family[0] : null;
+    let person_text = "";
+    if (name !== null) {
+      const first_family = name.family.length > 0 && name.family[0].length > 0 ? name.family[0] : null;
+      person_text = `
+        <div class='person-text'>
+          ${first_family ? "<div>" + first_family + "</div>" : ""}
+          <div>${name.given}</div>
+          ${name.patronymic ? "<div>" + name.patronymic + "</div>" : ""}
+        </div>
+      `;
+    }
     this.html = $(`
       <div class='person-container' style='left: 0px; top: 0px;'>
         <div class='person-box ${this.person.gender == Gender.Male ? "person-male" : "person-female"}'>
           <img class='person-image' src='${this.person.image}'/>
-          <div class='person-text'>
-            ${first_family ? "<div>" + first_family + "</div>" : ""}
-            <div>${name.given}</div>
-            ${name.patronymic ? "<div>" + name.patronymic + "</div>" : ""}
-          </div>
+          ${person_text}
         </div>
       </div>
     `)

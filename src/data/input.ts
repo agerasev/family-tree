@@ -27,8 +27,8 @@ export type InGender = "male" | "female";
 
 export interface InPerson {
   id: string,
-  name: InName,
   gender: InGender,
+  name?: InName,
   parents?: {
     father?: string,
     mother?: string,
