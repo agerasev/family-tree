@@ -12,7 +12,8 @@ export type InDate = {
 
 export type InEventType =
   "birth" |
-  "death";
+  "death" |
+  "settle";
 
 export interface InEvent {
   type: InEventType,

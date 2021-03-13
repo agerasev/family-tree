@@ -36,7 +36,10 @@ export class Name {
   }
 
   static createUnknown(): Name {
-    return new Name("???");
+    return new Name("");
+  }
+  isUnknown(): boolean {
+    return this.given.length === 0 && this.family.length === 0 && this.patronymic === null;
   }
 }
 
@@ -66,6 +69,7 @@ export function genderInverse(gender: Gender): Gender {
 export enum EventType {
   Birth,
   Death,
+  Settle,
 }
 export function eventTypeFromText(str: InEventType): EventType {
   switch (str) {
@@ -74,6 +78,9 @@ export function eventTypeFromText(str: InEventType): EventType {
     }
     case "death": {
       return EventType.Death;
+    }
+    case "settle": {
+      return EventType.Settle;
     }
   }
 }
@@ -181,6 +188,9 @@ export class Person {
       gender,
     );
   }
+  isUnknown(): boolean {
+    return this.name.isUnknown();
+  }
 }
 
 export class Tree {
@@ -216,20 +226,43 @@ export class Tree {
           if (father.gender !== Gender.Male) {
             throw Error("Gender mismatch");
           }
-        } else {
-          father = Person.createUnknown(Gender.Male);
         }
-        father.children.push(person);
-
         let mother: Person | null = null;
         if (in_person.parents.mother !== undefined) {
           mother = this.getPerson(in_person.parents.mother);
           if (mother.gender !== Gender.Female) {
             throw Error("Gender mismatch");
           }
-        } else {
-          mother = Person.createUnknown(Gender.Female);
         }
+
+        if (father === null) {
+          if (mother === null) {
+            throw Error("Both parents are unknown");
+          }
+          for (let f of mother.has_children_with.values()) {
+            console.log(f);
+            if (f.isUnknown()) {
+              father = f;
+              break;
+            }
+          }
+          if (father === null) {
+            father = Person.createUnknown(Gender.Male);
+          }
+        } else if (mother === null) {
+          for (let m of father.has_children_with.values()) {
+            console.log(m);
+            if (m.isUnknown()) {
+              mother = m;
+              break;
+            }
+          }
+          if (mother === null) {
+            mother = Person.createUnknown(Gender.Female);
+          }
+        }
+
+        father.children.push(person);
         mother.children.push(person);
 
         person.parents = { father, mother }
