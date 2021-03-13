@@ -38,7 +38,7 @@ export class FrameTimer implements AnimationTimer {
   animate: boolean = false;
   callback: ((time: number) => void) | null = null;
   prev_time: number = 0.0;
-  static max_step = 100.0;
+  static max_step = 80.0;
 
   constructor() {}
   frameCallback = (abs_time: number) => {
