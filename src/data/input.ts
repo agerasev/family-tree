@@ -10,6 +10,8 @@ export type InDate = {
   year?: number,
 } | string;
 
+export type InPlace = string[];
+
 export type InEventType =
   "birth" |
   "death" |
@@ -18,7 +20,7 @@ export type InEventType =
 export interface InEvent {
   type: InEventType,
   date?: InDate,
-  place?: string[],
+  place?: InPlace,
 }
 
 export type InGender = "male" | "female";
@@ -35,7 +37,15 @@ export interface InPerson {
   image?: string,
 }
 
+export interface InMarriage {
+  husband: string,
+  wife: string,
+  date?: InDate,
+  place?: InPlace,
+}
+
 export interface InTree {
   version: string,
   persons: InPerson[],
+  marriages: InMarriage[],
 }

@@ -1,7 +1,7 @@
-import {InDate, InEvent, InEventType, InGender, InName, InPerson, InTree} from "./input";
+import {InDate, InEvent, InEventType, InGender, InMarriage, InName, InPerson, InTree} from "./input";
 import inputTI from "../gen/input-ti";
 import {createCheckers, func} from "ts-interface-checker";
-import {idCheck, randomId} from "./id";
+import {idCheck, mixIds, randomId} from "./id";
 
 const checkers = createCheckers(inputTI);
 
@@ -103,15 +103,17 @@ export function readDate(date: InDate): Date {
   }
 }
 
+export type Place = string[]; 
+
 export class Event {
   type: EventType;
   date: Date | null;
-  place: string[] | null;
+  place: Place | null;
 
   constructor(
     type: EventType,
     date?: Date,
-    place?: string[],
+    place?: Place,
   ) {
     this.type = type;
     this.date = date || null;
@@ -137,6 +139,8 @@ export class Person {
   } | null;
   children: Person[];
   has_children_with: Map<string, Person>;
+  marriages: Map<string, Marriage>;
+  spouses: Map<string, Person>;
   events: Event[];
   image: string;
 
@@ -151,8 +155,12 @@ export class Person {
     this.name = name;
     this.gender = gender;
     this.parents = null;
+
     this.children = [];
     this.has_children_with = new Map<string, Person>();
+    this.marriages = new Map<string, Marriage>();
+    this.spouses = new Map<string, Person>();
+
     this.events = events || [];
     if (image !== undefined) {
       this.image = "data/" + image;
@@ -191,11 +199,60 @@ export class Person {
   isUnknown(): boolean {
     return this.name.isUnknown();
   }
+
+  addMarriage(marriage: Marriage) {
+    this.marriages.set(marriage.id, marriage);
+    if (this === marriage.husband) {
+      this.spouses.set(marriage.wife.id, marriage.wife);
+    } else if (this === marriage.wife) {
+      this.spouses.set(marriage.husband.id, marriage.husband);
+    } else {
+      throw Error("Wrong marriage");
+    }
+  }
+}
+
+export class Marriage {
+  id: string;
+  husband: Person;
+  wife: Person;
+  date: Date | null;
+  place: Place | null;
+
+  constructor(
+    husband: Person,
+    wife: Person,
+    date?: Date,
+    place?: Place,
+  ) {
+    this.id = mixIds(husband.id, wife.id);
+    this.husband = husband;
+    this.wife = wife;
+    this.date = date || null;
+    this.place = place || null;
+  }
+
+  static fromDict(husband: Person, wife: Person, obj: InMarriage) {
+    checkers.InMarriage.strictCheck(obj);
+    if (
+      husband.id !== obj.husband || husband.gender !== Gender.Male ||
+      wife.id !== obj.wife || wife.gender !== Gender.Female
+    ) {
+      throw Error("Marriage mismatch");
+    }
+    return new Marriage(
+      husband,
+      wife,
+      obj.date ? readDate(obj.date) : undefined,
+      obj.place,
+    );
+  }
 }
 
 export class Tree {
   version: number[];
   persons: Map<string, Person>;
+  marriages: Map<string, Marriage>;
 
   getPerson(id: string): Person {
     const person = this.persons.get(id);
@@ -209,6 +266,9 @@ export class Tree {
     checkers.InTree.strictCheck(obj);
     this.version = obj.version.split(".").map(s => parseInt(s));
     this.persons = new Map<string, Person>();
+    this.marriages = new Map<string, Marriage>();
+
+    // Person
     for (let in_person of obj.persons) {
       const id = in_person.id;
       idCheck(id);
@@ -217,8 +277,11 @@ export class Tree {
       }
       this.persons.set(id, Person.fromDict(in_person));
     }
+
+    // Parents
     for (let in_person of obj.persons) {
       let person = this.getPerson(in_person.id);
+      
       if (in_person.parents !== undefined) {
         let father: Person | null = null;
         if (in_person.parents.father !== undefined) {
@@ -240,7 +303,6 @@ export class Tree {
             throw Error("Both parents are unknown");
           }
           for (let f of mother.has_children_with.values()) {
-            console.log(f);
             if (f.isUnknown()) {
               father = f;
               break;
@@ -251,7 +313,6 @@ export class Tree {
           }
         } else if (mother === null) {
           for (let m of father.has_children_with.values()) {
-            console.log(m);
             if (m.isUnknown()) {
               mother = m;
               break;
@@ -270,6 +331,16 @@ export class Tree {
         father.has_children_with.set(mother.id, mother);
         mother.has_children_with.set(father.id, father);
       }
+    }
+
+    // Marriages
+    for (let in_marriage of obj.marriages) {
+      const husband = this.getPerson(in_marriage.husband);
+      const wife = this.getPerson(in_marriage.wife);
+      const marriage = Marriage.fromDict(husband, wife, in_marriage);
+      this.marriages.set(marriage.id, marriage);
+      husband.addMarriage(marriage);
+      wife.addMarriage(marriage);
     }
   }
 }

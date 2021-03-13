@@ -159,10 +159,27 @@ export class PersonNode implements Entity {
   }
 
   canExpandSide(): boolean {
-    return this.person.has_children_with.size > this.side.size;
+    let set = new Set<string>();
+    for (let id of this.person.spouses.keys()) {
+      set.add(id);
+    }
+    for (let id of this.person.has_children_with.keys()) {
+      set.add(id);
+    }
+    return set.size > this.side.size;
   }
   expandSide(dir: number) {
+    let map = new Map<string, Person>();
+    for (let [id, person] of this.person.spouses) {
+      map.set(id, person);
+    }
     for (let [id, person] of this.person.has_children_with) {
+      if (!map.has(id)) {
+        map.set(id, person);
+      }
+    }
+
+    for (let [id, person] of map) {
       if (!this.side.has(mixIds(this.id(), id))) {
         let node = this.composer.createNode(person, this.position + dir * side_shift, this.level);
         let hlink = this.composer.bindHorizontal(this, node);
