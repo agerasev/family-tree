@@ -230,7 +230,7 @@ export class Marriage {
       husband.id !== obj.husband || husband.gender !== Gender.Male ||
       wife.id !== obj.wife || wife.gender !== Gender.Female
     ) {
-      throw Error("Marriage mismatch");
+      throw Error(`Marriage ${husband.id}<->${wife.id} mismatch`);
     }
     return new Marriage(
       husband,
@@ -279,20 +279,20 @@ export class Tree {
         if (in_person.parents.father !== undefined) {
           father = this.getPerson(in_person.parents.father);
           if (father.gender !== Gender.Male) {
-            throw Error("Gender mismatch");
+            throw Error(`Gender ${in_person.id} mismatch`);
           }
         }
         let mother: Person | null = null;
         if (in_person.parents.mother !== undefined) {
           mother = this.getPerson(in_person.parents.mother);
           if (mother.gender !== Gender.Female) {
-            throw Error("Gender mismatch");
+            throw Error(`Gender ${in_person.id} mismatch`);
           }
         }
 
         if (father === null) {
           if (mother === null) {
-            throw Error("Both parents are unknown");
+            throw Error(`Both parents of ${person.id} are unknown`);
           }
           for (let f of mother.has_children_with.values()) {
             if (f.isUnknown()) {
